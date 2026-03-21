@@ -1,4 +1,6 @@
-<!DOCTYPE html>
+import re
+
+html_content = """<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -127,10 +129,10 @@ button {
   background: var(--text-main);
   color: white;
   border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   transition: opacity 0.2s;
 }
@@ -582,12 +584,9 @@ button:hover {
     <div class="header-actions">
       <div>
         <h1 class="page-title">Command Center</h1>
-        <p class="page-subtitle">Saturday, March 21, 2026</p>
+        <p class="page-subtitle" id="currentDate">Saturday, March 21, 2026</p>
       </div>
-      <div style="display: flex; gap: 12px;">
-        <button class="btn-outline" onclick="openKpiModal()">Edit KPIs</button>
-        <button onclick="generateReport()">Generate Daily Report</button>
-      </div>
+      <button onclick="generateReport()">Generate Daily Report</button>
     </div>
 
     <!-- Top Stats -->
@@ -752,24 +751,6 @@ button:hover {
   </div>
 </div>
 
-
-<!-- Modal: Edit KPIs -->
-<div class="modal-overlay" id="kpiModal">
-  <div class="modal-content">
-    <h2>Edit KPIs</h2>
-    <form id="kpiForm">
-      <div id="kpiInputsContainer"></div>
-      <div style="margin-top:16px; margin-bottom: 16px;">
-        <button type="button" class="btn-outline" style="font-size:12px; padding: 4px 8px;" onclick="addKpiField()">+ Add KPI</button>
-      </div>
-      <div class="modal-actions">
-        <button type="button" class="btn-outline" onclick="closeKpiModal()">Cancel</button>
-        <button type="submit">Save KPIs</button>
-      </div>
-    </form>
-  </div>
-</div>
-
 <!-- Modal: Generate Report -->
 <div class="modal-overlay" id="reportModal">
   <div class="modal-content">
@@ -783,7 +764,11 @@ button:hover {
 
 <script>
 // --- UI Helpers ---
-// setDate removed for exact screenshot matching
+function setDate() {
+  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  document.getElementById('currentDate').innerText = new Date().toLocaleDateString('en-US', options);
+}
+setDate();
 
 function showTab(tabId, element) {
   document.querySelectorAll('.tab').forEach(t => t.style.display = 'none');
@@ -798,8 +783,8 @@ function showTab(tabId, element) {
 // --- Data & LocalStorage ---
 const defaultData = {
   kpis: {
-    'Leads Today': 8,
-    'Broken Automations': 0
+    leadsToday: 8,
+    brokenAutomations: 0
   },
   items: [
     { id: 1, type: 'campaign', title: 'FitLife Summer Video', owner: 'Alex', status: 'At Risk', dueDate: '2023-12-01', nextAction: 'Write script', notes: '', lastUpdated: Date.now() - (48 * 3600 * 1000) },
@@ -854,54 +839,32 @@ function renderDashboard() {
   const totalCampaigns = appData.items.filter(i => i.type === 'campaign').length;
   const overdueTasks = appData.items.filter(i => i.type === 'task' && i.status === 'Delayed').length;
 
-
-  let topStatsHtml = '';
-
-  let leadsTodayVal = appData.kpis['Leads Today'] !== undefined ? appData.kpis['Leads Today'] : 8;
-
-  topStatsHtml += `
+  document.getElementById('dashTopStats').innerHTML = `
     <div class="card stat-card">
       <div class="title">Leads Today</div>
-      <div class="value">${leadsTodayVal}</div>
+      <div class="value">${appData.kpis.leadsToday || 8}</div>
       <div class="subtitle">from running campaigns</div>
-      <div class="icon icon-purple"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg></div>
+      <div class="icon icon-purple">📈</div>
     </div>
-  `;
-
-  // Render calculated stats
-  topStatsHtml += `
     <div class="card stat-card">
       <div class="title">Active Campaigns</div>
       <div class="value">${activeCampaigns}</div>
       <div class="subtitle">${totalCampaigns} total</div>
-      <div class="icon icon-blue"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></div>
+      <div class="icon icon-blue">📢</div>
     </div>
     <div class="card stat-card red">
       <div class="title">Tasks Overdue</div>
       <div class="value">${overdueTasks}</div>
       <div class="subtitle">&nbsp;</div>
-      <div class="icon icon-red"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>
+      <div class="icon icon-red">⏰</div>
+    </div>
+    <div class="card stat-card">
+      <div class="title">Broken Automations</div>
+      <div class="value">${appData.kpis.brokenAutomations || 0}</div>
+      <div class="subtitle">&nbsp;</div>
+      <div class="icon icon-orange">✖</div>
     </div>
   `;
-
-  // Render user KPIs (except leads today which we hardcoded first)
-  for (const [key, val] of Object.entries(appData.kpis)) {
-    if (key === 'Leads Today' || key === 'leadsToday') continue;
-    let iconHtml = '<div class="icon icon-orange"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></div>';
-    let subtitle = '&nbsp;';
-
-    topStatsHtml += `
-      <div class="card stat-card">
-        <div class="title">${key}</div>
-        <div class="value">${val}</div>
-        <div class="subtitle">${subtitle}</div>
-        ${iconHtml}
-      </div>
-    `;
-  }
-
-  document.getElementById('dashTopStats').innerHTML = topStatsHtml;
-
 
   // Issues Detected
   const staleItems = appData.items.filter(isStale);
@@ -912,16 +875,16 @@ function renderDashboard() {
 
   const staleTasks = staleItems.filter(i => i.type === 'task').length;
   if (overdueTasks > 0) {
-    issuesHtml += `<div class="issue-item"><div class="issue-icon red"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>${overdueTasks} task${overdueTasks>1?'s':''} overdue</div>`;
+    issuesHtml += `<div class="issue-item"><div class="issue-icon red">⏰</div>${overdueTasks} task${overdueTasks>1?'s':''} overdue</div>`;
     issuesCount++;
   }
   if (staleTasks > 0) {
-    issuesHtml += `<div class="issue-item"><div class="issue-icon yellow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div>${staleTasks} task${staleTasks>1?'s':''} with no update in 24h</div>`;
+    issuesHtml += `<div class="issue-item"><div class="issue-icon yellow">⚠</div>${staleTasks} task${staleTasks>1?'s':''} with no update in 24h</div>`;
     issuesCount++;
   }
   const brokenCampaigns = appData.items.filter(i => i.type === 'campaign' && (i.status === 'Delayed' || isStale(i))).length;
   if (brokenCampaigns > 0) {
-    issuesHtml += `<div class="issue-item"><div class="issue-icon orange"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path></svg></div>${brokenCampaigns} campaign${brokenCampaigns>1?'s':''} need fixing</div>`;
+    issuesHtml += `<div class="issue-item"><div class="issue-icon orange">📢</div>${brokenCampaigns} campaign${brokenCampaigns>1?'s':''} need fixing</div>`;
     issuesCount++;
   }
 
@@ -1184,85 +1147,24 @@ document.getElementById('itemForm').addEventListener('submit', function(e) {
   renderAll();
 });
 
-
-// --- KPI Logic ---
-function openKpiModal() {
-  const container = document.getElementById('kpiInputsContainer');
-  container.innerHTML = '';
-  for (const [key, val] of Object.entries(appData.kpis)) {
-    addKpiField(key, val);
-  }
-  document.getElementById('kpiModal').classList.add('active');
-}
-
-function closeKpiModal() {
-  document.getElementById('kpiModal').classList.remove('active');
-}
-
-function addKpiField(key = '', val = '') {
-  const container = document.getElementById('kpiInputsContainer');
-  const div = document.createElement('div');
-  div.style.display = 'flex';
-  div.style.gap = '8px';
-  div.style.marginBottom = '8px';
-  div.innerHTML = `
-    <input type="text" placeholder="KPI Name" value="${key}" class="kpi-key" style="flex:1;" required>
-    <input type="text" placeholder="Value" value="${val}" class="kpi-val" style="flex:1;" required>
-    <button type="button" class="btn-outline" style="padding:0 12px;" onclick="this.parentElement.remove()">X</button>
-  `;
-  container.appendChild(div);
-}
-
-document.getElementById('kpiForm').addEventListener('submit', function(e) {
-  e.preventDefault();
-  const keys = document.querySelectorAll('.kpi-key');
-  const vals = document.querySelectorAll('.kpi-val');
-
-  appData.kpis = {};
-  for(let i=0; i<keys.length; i++) {
-    const k = keys[i].value.trim();
-    const v = vals[i].value.trim();
-    if(k) appData.kpis[k] = v;
-  }
-
-  saveData();
-  closeKpiModal();
-  renderAll();
-});
-
 // --- Reports ---
-
 function generateReport() {
   const dateStr = new Date().toLocaleDateString();
   const delayedItems = appData.items.filter(i => i.status === 'Delayed');
   const onTrackItems = appData.items.filter(i => i.status === 'On Track');
   const atRiskItems = appData.items.filter(i => i.status === 'At Risk');
 
-  let reportText = `DAILY REPORT - ${dateStr}
-`;
-  reportText += `==============================
+  let reportText = `DAILY REPORT - ${dateStr}\n`;
+  reportText += `==============================\n\n`;
 
-`;
+  reportText += `🚨 OVERDUE / DELAYED (${delayedItems.length}):\n`;
+  delayedItems.forEach(i => reportText += `- [${i.type.toUpperCase()}] ${i.title} (Owner: ${i.owner})\n  Next: ${i.nextAction}\n`);
 
-  reportText += `🚨 OVERDUE / DELAYED (${delayedItems.length}):
-`;
-  delayedItems.forEach(i => reportText += `- [${i.type.toUpperCase()}] ${i.title} (Owner: ${i.owner})
-  Next: ${i.nextAction}
-`);
+  reportText += `\n⚠️ AT RISK (${atRiskItems.length}):\n`;
+  atRiskItems.forEach(i => reportText += `- [${i.type.toUpperCase()}] ${i.title} (Owner: ${i.owner})\n  Next: ${i.nextAction}\n`);
 
-  reportText += `
-⚠️ AT RISK (${atRiskItems.length}):
-`;
-  atRiskItems.forEach(i => reportText += `- [${i.type.toUpperCase()}] ${i.title} (Owner: ${i.owner})
-  Next: ${i.nextAction}
-`);
-
-  reportText += `
-✅ ON TRACK (${onTrackItems.length}):
-`;
-  onTrackItems.forEach(i => reportText += `- [${i.type.toUpperCase()}] ${i.title} (Owner: ${i.owner})
-  Next: ${i.nextAction}
-`);
+  reportText += `\n✅ ON TRACK (${onTrackItems.length}):\n`;
+  onTrackItems.forEach(i => reportText += `- [${i.type.toUpperCase()}] ${i.title} (Owner: ${i.owner})\n  Next: ${i.nextAction}\n`);
 
   document.getElementById('reportContent').innerText = reportText;
   document.getElementById('reportModal').classList.add('active');
@@ -1279,3 +1181,7 @@ document.addEventListener('DOMContentLoaded', renderAll);
 
 </body>
 </html>
+"""
+
+with open("index.html", "w") as f:
+    f.write(html_content)

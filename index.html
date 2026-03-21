@@ -677,7 +677,10 @@ button:hover {
     <div class="header-actions">
       <div>
         <h1 class="page-title">My Work</h1>
-        <p class="page-subtitle">Filtered for Rose</p>
+        <div style="display: flex; align-items: center; gap: 8px; margin-top: 8px;">
+          <label for="myWorkUserSelect" style="font-size: 14px; color: var(--text-muted);">Select Person:</label>
+          <select id="myWorkUserSelect" onchange="renderMyWork()" style="padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border-color); font-size: 14px;"></select>
+        </div>
       </div>
       <button onclick="openModal()">+ Add Item</button>
     </div>
@@ -957,7 +960,7 @@ function renderDashboard() {
     if (task.title.includes('Apex')) dotColor = 'blue';
 
     let tag = '';
-    if (isStale(task)) tag = '<span class="task-tag stale">Stale</span>';
+    if (isStale(task)) tag = '<span class="task-tag stale">Needs Update</span>';
     if (task.status === 'Delayed') tag = '<span class="task-tag overdue">Overdue</span>';
 
     taskRows += `
@@ -986,7 +989,7 @@ function renderCampaigns() {
         </div>
         <div class="list-card-right">
           ${getStatusBadge(item.status)}
-          ${isStale(item) ? '<div class="stale-warning" style="justify-content:flex-end;">⚠ Stale</div>' : ''}
+          ${isStale(item) ? '<div class="stale-warning" style="justify-content:flex-end;">⚠ Needs Update</div>' : ''}
         </div>
       </div>
     `;
@@ -1007,7 +1010,7 @@ function renderTasks() {
         </div>
         <div class="list-card-right">
           ${getStatusBadge(item.status)}
-          ${isStale(item) ? '<div class="stale-warning" style="justify-content:flex-end;">⚠ Stale</div>' : ''}
+          ${isStale(item) ? '<div class="stale-warning" style="justify-content:flex-end;">⚠ Needs Update</div>' : ''}
         </div>
       </div>
     `;
@@ -1017,10 +1020,37 @@ function renderTasks() {
 function renderMyWork() {
   const prioContainer = document.getElementById('myWorkPriority');
   const otherContainer = document.getElementById('myWorkOther');
+  const selectEl = document.getElementById('myWorkUserSelect');
   prioContainer.innerHTML = '';
   otherContainer.innerHTML = '';
 
-  const myItems = appData.items.filter(i => i.owner === 'Rose');
+  // Extract all unique owners
+  const owners = [...new Set(appData.items.map(i => i.owner).filter(Boolean))].sort();
+
+  // Store the current selection to retain it after re-render if it still exists
+  let currentSelection = selectEl.value;
+
+  // Repopulate dropdown
+  selectEl.innerHTML = '';
+  if (owners.length === 0) {
+    selectEl.innerHTML = '<option value="">No Owners Found</option>';
+  } else {
+    owners.forEach(owner => {
+      const option = document.createElement('option');
+      option.value = owner;
+      option.textContent = owner;
+      selectEl.appendChild(option);
+    });
+
+    if (currentSelection && owners.includes(currentSelection)) {
+      selectEl.value = currentSelection;
+    } else {
+      selectEl.value = owners[0];
+    }
+  }
+
+  const selectedOwner = selectEl.value;
+  const myItems = appData.items.filter(i => i.owner === selectedOwner);
   let hasPrio = false;
   let hasOther = false;
 
@@ -1035,7 +1065,7 @@ function renderMyWork() {
         <div class="list-card-right">
           ${getStatusBadge(item.status)}
           ${item.type === 'pipeline' ? `<div style="font-size:12px; margin-top:4px; color:var(--text-muted)">Stage: ${item.stage}</div>` : ''}
-          ${isStale(item) ? '<div class="stale-warning" style="justify-content:flex-end;">⚠ Stale</div>' : ''}
+          ${isStale(item) ? '<div class="stale-warning" style="justify-content:flex-end;">⚠ Needs Update</div>' : ''}
         </div>
       </div>
     `;
@@ -1103,7 +1133,7 @@ function renderPipeline() {
         <div class="kanban-title">${item.title}</div>
         <div class="kanban-meta">Owner: ${item.owner}</div>
         ${getStatusBadge(item.status)}
-        ${isStale(item) ? '<div class="stale-warning">⚠ Stale (>24h)</div>' : ''}
+        ${isStale(item) ? '<div class="stale-warning">⚠ Needs Update (>24h)</div>' : ''}
       `;
       col.appendChild(el);
     });
@@ -1135,7 +1165,8 @@ function openModal(id = null, type = 'task') {
     document.getElementById('modalTitle').innerText = 'Add Item';
     document.getElementById('itemId').value = '';
     document.getElementById('itemType').value = type;
-    document.getElementById('itemOwner').value = 'Rose';
+    const currentOwner = document.getElementById('myWorkUserSelect')?.value;
+    document.getElementById('itemOwner').value = currentOwner || 'Rose';
   }
 
   toggleStageField();

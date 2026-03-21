@@ -1,4 +1,6 @@
-<!DOCTYPE html>
+import re
+
+html_content = """<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -127,10 +129,10 @@ button {
   background: var(--text-main);
   color: white;
   border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   transition: opacity 0.2s;
 }
@@ -573,19 +575,6 @@ button:hover {
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
     My Work
   </div>
-  <div class="nav-item" onclick="showTab('automations', this)">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-    Automations
-  </div>
-  <div class="nav-item" onclick="showTab('resources', this)">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
-    Resources
-  </div>
-  <div style="flex: 1;"></div>
-  <div class="nav-item" onclick="toggleArchived()" id="toggleArchiveSidebar" style="color:var(--text-muted);">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"></polyline><rect x="1" y="3" width="22" height="5"></rect><line x1="10" y1="12" x2="14" y2="12"></line></svg>
-    Show Archived
-  </div>
 </div>
 
 <div class="main">
@@ -595,12 +584,9 @@ button:hover {
     <div class="header-actions">
       <div>
         <h1 class="page-title">Command Center</h1>
-        <p class="page-subtitle">Saturday, March 21, 2026</p>
+        <p class="page-subtitle" id="currentDate">Saturday, March 21, 2026</p>
       </div>
-      <div style="display: flex; gap: 12px;">
-        <button class="btn-outline" onclick="openKpiModal()">Edit KPIs</button>
-        <button onclick="generateReport()">Generate Daily Report</button>
-      </div>
+      <button onclick="generateReport()">Generate Daily Report</button>
     </div>
 
     <!-- Top Stats -->
@@ -684,40 +670,13 @@ button:hover {
     <div class="list-view" id="tasksList"></div>
   </div>
 
-  <!-- AUTOMATIONS TAB -->
-  <div id="automations" class="tab" style="display:none;">
-    <div class="header-actions">
-      <div>
-        <h1 class="page-title">Automations</h1>
-        <p class="page-subtitle">Manage Zapier, Make, and internal automations</p>
-      </div>
-      <button onclick="openModal(null, 'automation')">+ Add Automation</button>
-    </div>
-    <div class="list-view" id="automationsList"></div>
-  </div>
-
-  <!-- RESOURCES TAB -->
-  <div id="resources" class="tab" style="display:none;">
-    <div class="header-actions">
-      <div>
-        <h1 class="page-title">Resources</h1>
-        <p class="page-subtitle">SOPs, Templates, and Assets</p>
-      </div>
-      <button onclick="openModal(null, 'resource')">+ Add Resource</button>
-    </div>
-    <div class="list-view" id="resourcesList"></div>
-  </div>
-
 
   <!-- MY WORK TAB -->
   <div id="mywork" class="tab" style="display:none;">
     <div class="header-actions">
       <div>
         <h1 class="page-title">My Work</h1>
-        <div style="display: flex; align-items: center; gap: 8px; margin-top: 8px;">
-          <label for="myWorkUserSelect" style="font-size: 14px; color: var(--text-muted);">Select Person:</label>
-          <select id="myWorkUserSelect" onchange="renderMyWork()" style="padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border-color); font-size: 14px;"></select>
-        </div>
+        <p class="page-subtitle">Filtered for Rose</p>
       </div>
       <button onclick="openModal()">+ Add Item</button>
     </div>
@@ -743,8 +702,6 @@ button:hover {
           <option value="task">Task</option>
           <option value="campaign">Campaign</option>
           <option value="pipeline">Pipeline Item</option>
-          <option value="automation">Automation</option>
-          <option value="resource">Resource</option>
         </select>
       </div>
       <div class="form-group">
@@ -755,47 +712,12 @@ button:hover {
         <label>Owner</label>
         <input type="text" id="itemOwner" required>
       </div>
-
-      <!-- Automation Specific Fields -->
-      <div id="automationGroup" style="display:none;">
-        <div class="form-group">
-          <label>Platform (e.g. Zapier, Make)</label>
-          <input type="text" id="itemPlatform">
-        </div>
-        <div class="form-group">
-          <label>Trigger</label>
-          <input type="text" id="itemTrigger">
-        </div>
-        <div class="form-group">
-          <label>Action</label>
-          <input type="text" id="itemAction">
-        </div>
-      </div>
-
-      <!-- Resource Specific Fields -->
-      <div id="resourceGroup" style="display:none;">
-        <div class="form-group">
-          <label>Category</label>
-          <select id="itemCategory">
-            <option value="SOPs">SOPs</option>
-            <option value="Templates">Templates</option>
-            <option value="Client Assets">Client Assets</option>
-            <option value="Training">Training</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Link / File URL</label>
-          <input type="text" id="itemLink">
-        </div>
-      </div>
-
-      <div class="form-group" id="statusGroup">
+      <div class="form-group">
         <label>Status</label>
         <select id="itemStatus" required>
           <option value="On Track">On Track</option>
           <option value="At Risk">At Risk</option>
           <option value="Delayed">Delayed</option>
-          <option value="Blocked">Blocked</option>
         </select>
       </div>
       <div class="form-group" id="stageGroup" style="display:none;">
@@ -809,46 +731,21 @@ button:hover {
           <option value="Uploaded">Uploaded</option>
         </select>
       </div>
-      <div class="form-group" id="dueDateGroup">
+      <div class="form-group">
         <label>Due Date</label>
         <input type="date" id="itemDueDate">
       </div>
-      <div class="form-group" id="nextActionGroup">
+      <div class="form-group">
         <label>Next Action (Required)</label>
         <input type="text" id="itemNextAction" required>
       </div>
-      <div class="form-group" id="commentsSection">
-        <label>Activity & Notes</label>
-        <div id="commentsList" style="max-height: 200px; overflow-y: auto; background:#f9fafb; padding:12px; border-radius:var(--radius-sm); border:1px solid var(--border-color); margin-bottom:12px; display:flex; flex-direction:column; gap:12px;"></div>
-        <div style="display:flex; gap:8px;">
-          <input type="text" id="newCommentInput" placeholder="Add a note or update..." style="flex:1;">
-          <button type="button" class="btn-outline" onclick="addComment()" id="addCommentBtn" style="white-space:nowrap;">Add Note</button>
-        </div>
-      </div>
-      <div class="modal-actions" style="justify-content: space-between;">
-        <button type="button" class="btn-outline" id="archiveBtn" onclick="archiveItem()" style="color:var(--color-red); border-color:var(--color-red-bg); display:none;">Archive</button>
-        <div style="display:flex; gap:12px;">
-          <button type="button" class="btn-outline" onclick="closeModal()">Cancel</button>
-          <button type="submit" id="saveItemBtn">Save Item</button>
-        </div>
-      </div>
-    </form>
-  </div>
-</div>
-
-
-<!-- Modal: Edit KPIs -->
-<div class="modal-overlay" id="kpiModal">
-  <div class="modal-content">
-    <h2>Edit KPIs</h2>
-    <form id="kpiForm">
-      <div id="kpiInputsContainer"></div>
-      <div style="margin-top:16px; margin-bottom: 16px;">
-        <button type="button" class="btn-outline" style="font-size:12px; padding: 4px 8px;" onclick="addKpiField()">+ Add KPI</button>
+      <div class="form-group">
+        <label>Notes</label>
+        <textarea id="itemNotes" rows="3"></textarea>
       </div>
       <div class="modal-actions">
-        <button type="button" class="btn-outline" onclick="closeKpiModal()">Cancel</button>
-        <button type="submit">Save KPIs</button>
+        <button type="button" class="btn-outline" onclick="closeModal()">Cancel</button>
+        <button type="submit">Save Item</button>
       </div>
     </form>
   </div>
@@ -867,7 +764,11 @@ button:hover {
 
 <script>
 // --- UI Helpers ---
-// setDate removed for exact screenshot matching
+function setDate() {
+  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  document.getElementById('currentDate').innerText = new Date().toLocaleDateString('en-US', options);
+}
+setDate();
 
 function showTab(tabId, element) {
   document.querySelectorAll('.tab').forEach(t => t.style.display = 'none');
@@ -882,8 +783,8 @@ function showTab(tabId, element) {
 // --- Data & LocalStorage ---
 const defaultData = {
   kpis: {
-    'Leads Today': 8,
-    'Broken Automations': 0
+    leadsToday: 8,
+    brokenAutomations: 0
   },
   items: [
     { id: 1, type: 'campaign', title: 'FitLife Summer Video', owner: 'Alex', status: 'At Risk', dueDate: '2023-12-01', nextAction: 'Write script', notes: '', lastUpdated: Date.now() - (48 * 3600 * 1000) },
@@ -913,32 +814,6 @@ function generateId() {
   return appData.items.length > 0 ? Math.max(...appData.items.map(i => i.id)) + 1 : 1;
 }
 
-// --- State ---
-let showArchived = false;
-
-function toggleArchived() {
-  showArchived = !showArchived;
-  const btn = document.getElementById('toggleArchiveSidebar');
-  if(btn) btn.innerHTML = showArchived ?
-    `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"></polyline><rect x="1" y="3" width="22" height="5"></rect><line x1="10" y1="12" x2="14" y2="12"></line></svg> Hide Archived` :
-    `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"></polyline><rect x="1" y="3" width="22" height="5"></rect><line x1="10" y1="12" x2="14" y2="12"></line></svg> Show Archived`;
-  renderAll();
-}
-
-function setFormReadOnly(isReadOnly) {
-  const form = document.getElementById('itemForm');
-  const elements = form.querySelectorAll('input, select, textarea');
-  elements.forEach(el => {
-    if (el.id !== 'itemId') {
-      el.disabled = isReadOnly;
-    }
-  });
-  const saveBtn = document.getElementById('saveItemBtn');
-  if (saveBtn) {
-    saveBtn.style.display = isReadOnly ? 'none' : 'block';
-  }
-}
-
 // --- Render Functions ---
 function renderAll() {
   renderDashboard();
@@ -946,131 +821,70 @@ function renderAll() {
   renderCampaigns();
   renderTasks();
   renderMyWork();
-  renderAutomations();
-  renderResources();
 }
 
 function isStale(item) {
   return Date.now() - item.lastUpdated > 24 * 60 * 60 * 1000;
 }
 
-function isOverdue(item) {
-  if (!item.dueDate) return false;
-  return new Date(item.dueDate).getTime() < Date.now();
-}
-
-function getComputedStatus(item) {
-  if (item.status === 'Blocked') return 'Blocked';
-  if (isOverdue(item)) return 'Overdue';
-  if (isStale(item)) return 'Needs Update';
-  return item.status;
-}
-
-function getStatusBadge(item) {
-  const status = getComputedStatus(item);
+function getStatusBadge(status) {
   if (status === 'On Track') return '<span class="kanban-badge bg-green">On Track</span>';
   if (status === 'At Risk') return '<span class="kanban-badge bg-yellow">At Risk</span>';
-  if (status === 'Delayed' || status === 'Overdue') return '<span class="kanban-badge bg-red">' + status + '</span>';
-  if (status === 'Blocked') return '<span class="kanban-badge" style="background:#f3f4f6; color:#111827;">Blocked</span>';
-  if (status === 'Needs Update') return '<span class="kanban-badge bg-yellow">Needs Update</span>';
-  return '<span class="kanban-badge" style="background:#e5e7eb; color:#374151;">' + status + '</span>';
-}
-
-function formatLastUpdated(timestamp) {
-  if (!timestamp) return 'Never';
-  const diffHours = Math.floor((Date.now() - timestamp) / (1000 * 60 * 60));
-  if (diffHours < 1) return 'Just now';
-  if (diffHours < 24) return `${diffHours}h ago`;
-  const diffDays = Math.floor(diffHours / 24);
-  return `${diffDays}d ago`;
+  if (status === 'Delayed') return '<span class="kanban-badge bg-red">Delayed</span>';
+  return '';
 }
 
 function renderDashboard() {
-  const allActiveItems = appData.items.filter(i => !i.archived);
+  const activeCampaigns = appData.items.filter(i => i.type === 'campaign' && i.status !== 'Delayed').length;
+  const totalCampaigns = appData.items.filter(i => i.type === 'campaign').length;
+  const overdueTasks = appData.items.filter(i => i.type === 'task' && i.status === 'Delayed').length;
 
-  const activeCampaigns = allActiveItems.filter(i => i.type === 'campaign' && i.status !== 'Delayed').length;
-  const totalCampaigns = allActiveItems.filter(i => i.type === 'campaign').length;
-  const overdueTasks = allActiveItems.filter(i => i.type === 'task' && (i.status === 'Delayed' || isOverdue(i))).length;
-
-
-  let topStatsHtml = '';
-
-  const activeCampaignsList = appData.items.filter(i => i.type === 'campaign' && i.status !== 'Delayed' && !i.archived);
-  let leadsTodayVal = activeCampaignsList.reduce((sum, camp) => sum + (parseInt(camp.leadsCount) || 0), 0);
-
-  // If the legacy hardcoded KPI still exists and we have no dynamic leads, default to 0.
-  // We can just trust the calculation entirely now.
-
-  topStatsHtml += `
+  document.getElementById('dashTopStats').innerHTML = `
     <div class="card stat-card">
       <div class="title">Leads Today</div>
-      <div class="value">${leadsTodayVal}</div>
+      <div class="value">${appData.kpis.leadsToday || 8}</div>
       <div class="subtitle">from running campaigns</div>
-      <div class="icon icon-purple"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg></div>
+      <div class="icon icon-purple">📈</div>
     </div>
-  `;
-
-  // Render calculated stats
-  topStatsHtml += `
     <div class="card stat-card">
       <div class="title">Active Campaigns</div>
       <div class="value">${activeCampaigns}</div>
       <div class="subtitle">${totalCampaigns} total</div>
-      <div class="icon icon-blue"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></div>
+      <div class="icon icon-blue">📢</div>
     </div>
     <div class="card stat-card red">
       <div class="title">Tasks Overdue</div>
       <div class="value">${overdueTasks}</div>
       <div class="subtitle">&nbsp;</div>
-      <div class="icon icon-red"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>
+      <div class="icon icon-red">⏰</div>
+    </div>
+    <div class="card stat-card">
+      <div class="title">Broken Automations</div>
+      <div class="value">${appData.kpis.brokenAutomations || 0}</div>
+      <div class="subtitle">&nbsp;</div>
+      <div class="icon icon-orange">✖</div>
     </div>
   `;
 
-  // Render user KPIs (except leads today and broken automations which we handle explicitly)
-  for (const [key, val] of Object.entries(appData.kpis)) {
-    if (key === 'Leads Today' || key === 'leadsToday' || key === 'Broken Automations') continue;
-    let iconHtml = '<div class="icon icon-orange"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></div>';
-    let subtitle = 'Custom KPI';
-
-    topStatsHtml += `
-      <div class="card stat-card">
-        <div class="title">${key}</div>
-        <div class="value">${val}</div>
-        <div class="subtitle">${subtitle}</div>
-        ${iconHtml}
-      </div>
-    `;
-  }
-
-  document.getElementById('dashTopStats').innerHTML = topStatsHtml;
-
-
   // Issues Detected
-  const activeItems = appData.items.filter(i => !i.archived);
-  const staleItems = activeItems.filter(isStale);
-  const delayedItems = activeItems.filter(i => i.status === 'Delayed' || isOverdue(i));
+  const staleItems = appData.items.filter(isStale);
+  const delayedItems = appData.items.filter(i => i.status === 'Delayed');
 
   let issuesHtml = '';
   let issuesCount = 0;
 
   const staleTasks = staleItems.filter(i => i.type === 'task').length;
-  if (delayedItems.length > 0) {
-    issuesHtml += `<div class="issue-item"><div class="issue-icon red"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>${delayedItems.length} item${delayedItems.length>1?'s':''} overdue/delayed</div>`;
+  if (overdueTasks > 0) {
+    issuesHtml += `<div class="issue-item"><div class="issue-icon red">⏰</div>${overdueTasks} task${overdueTasks>1?'s':''} overdue</div>`;
     issuesCount++;
   }
   if (staleTasks > 0) {
-    issuesHtml += `<div class="issue-item"><div class="issue-icon yellow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div>${staleTasks} task${staleTasks>1?'s':''} with no update in 24h</div>`;
+    issuesHtml += `<div class="issue-item"><div class="issue-icon yellow">⚠</div>${staleTasks} task${staleTasks>1?'s':''} with no update in 24h</div>`;
     issuesCount++;
   }
-  const brokenCampaigns = activeItems.filter(i => i.type === 'campaign' && (i.status === 'Delayed' || isOverdue(i) || isStale(i))).length;
+  const brokenCampaigns = appData.items.filter(i => i.type === 'campaign' && (i.status === 'Delayed' || isStale(i))).length;
   if (brokenCampaigns > 0) {
-    issuesHtml += `<div class="issue-item"><div class="issue-icon orange"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path></svg></div>${brokenCampaigns} campaign${brokenCampaigns>1?'s':''} need fixing</div>`;
-    issuesCount++;
-  }
-
-  const brokenAutomations = activeItems.filter(i => i.type === 'automation' && i.status === 'Delayed').length;
-  if (brokenAutomations > 0) {
-    issuesHtml += `<div class="issue-item"><div class="issue-icon red"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg></div>${brokenAutomations} automation${brokenAutomations>1?'s':''} broken</div>`;
+    issuesHtml += `<div class="issue-item"><div class="issue-icon orange">📢</div>${brokenCampaigns} campaign${brokenCampaigns>1?'s':''} need fixing</div>`;
     issuesCount++;
   }
 
@@ -1085,7 +899,7 @@ function renderDashboard() {
   let pipelineHtml = '';
 
   stages.forEach((stg, idx) => {
-    const count = activeItems.filter(i => i.type === 'pipeline' && i.stage === stg).length;
+    const count = appData.items.filter(i => i.type === 'pipeline' && i.stage === stg).length;
     pipelineHtml += `
       <div class="pipeline-stat">
         <div class="value">${count}</div>
@@ -1098,24 +912,21 @@ function renderDashboard() {
 
   // Recent Tasks
   let taskRows = '';
-  const recentTasks = activeItems.filter(i => i.type !== 'pipeline' && i.type !== 'automation' && i.type !== 'resource').sort((a,b) => b.lastUpdated - a.lastUpdated).slice(0, 4);
+  const recentTasks = appData.items.filter(i => i.type !== 'pipeline').slice(-4); // just mock recent
   recentTasks.forEach(task => {
     let dotColor = 'green';
-    if (task.status === 'At Risk' || isStale(task)) dotColor = 'yellow';
-    if (task.status === 'Delayed' || isOverdue(task)) dotColor = 'red';
+    if (task.status === 'At Risk') dotColor = 'yellow';
+    if (task.status === 'Delayed') dotColor = 'red';
     if (task.title.includes('Apex')) dotColor = 'blue';
 
     let tag = '';
-    if (isStale(task)) tag = '<span class="task-tag stale">Needs Update</span>';
-    if (isOverdue(task)) tag = '<span class="task-tag overdue">Overdue</span>';
+    if (isStale(task)) tag = '<span class="task-tag stale">Stale</span>';
+    if (task.status === 'Delayed') tag = '<span class="task-tag overdue">Overdue</span>';
 
     taskRows += `
       <div class="task-row" onclick="openModal(${task.id})" style="cursor:pointer;">
         <div class="task-dot ${dotColor}"></div>
-        <div class="task-title" style="flex:1;">
-          <div style="font-weight:500;">${task.title}</div>
-          <div style="font-size:12px; color:var(--text-muted);">Updated: ${formatLastUpdated(task.lastUpdated)}</div>
-        </div>
+        <div class="task-title">${task.title}</div>
         <div class="task-owner">${task.owner}</div>
         ${tag}
       </div>
@@ -1127,21 +938,18 @@ function renderDashboard() {
 function renderCampaigns() {
   const container = document.getElementById('campaignsList');
   container.innerHTML = '';
-  let items = appData.items.filter(i => i.type === 'campaign');
-  if (!showArchived) items = items.filter(i => !i.archived);
-
-  if (items.length === 0) container.innerHTML = '<p style="color:var(--text-muted); font-size:14px;">No campaigns found.</p>';
+  const items = appData.items.filter(i => i.type === 'campaign');
+  if (items.length === 0) container.innerHTML = '<p>No campaigns yet.</p>';
   items.forEach(item => {
-    const dueDateStr = item.dueDate ? ` | Due: ${item.dueDate}` : '';
     container.innerHTML += `
-      <div class="list-card" onclick="openModal(${item.id})" style="${item.archived ? 'opacity:0.6;' : ''}">
+      <div class="list-card" onclick="openModal(${item.id})">
         <div>
-          <div class="list-card-title">${item.title} ${item.archived ? '(Archived)' : ''}</div>
-          <div style="font-size: 14px; font-weight: 600; color: var(--color-purple); margin: 6px 0;">Next: ${item.nextAction || 'None'}</div>
-          <div class="list-card-sub">Owner: ${item.owner}${dueDateStr} | Updated: ${formatLastUpdated(item.lastUpdated)}</div>
+          <div class="list-card-title">${item.title}</div>
+          <div class="list-card-sub">Next: ${item.nextAction} | Owner: ${item.owner}</div>
         </div>
         <div class="list-card-right">
-          ${getStatusBadge(item)}
+          ${getStatusBadge(item.status)}
+          ${isStale(item) ? '<div class="stale-warning" style="justify-content:flex-end;">⚠ Stale</div>' : ''}
         </div>
       </div>
     `;
@@ -1151,67 +959,18 @@ function renderCampaigns() {
 function renderTasks() {
   const container = document.getElementById('tasksList');
   container.innerHTML = '';
-  let items = appData.items.filter(i => i.type === 'task');
-  if (!showArchived) items = items.filter(i => !i.archived);
-
-  if (items.length === 0) container.innerHTML = '<p style="color:var(--text-muted); font-size:14px;">No tasks found.</p>';
-  items.forEach(item => {
-    const dueDateStr = item.dueDate ? ` | Due: ${item.dueDate}` : '';
-    container.innerHTML += `
-      <div class="list-card" onclick="openModal(${item.id})" style="${item.archived ? 'opacity:0.6;' : ''}">
-        <div>
-          <div class="list-card-title">${item.title} ${item.archived ? '(Archived)' : ''}</div>
-          <div style="font-size: 14px; font-weight: 600; color: var(--color-purple); margin: 6px 0;">Next: ${item.nextAction || 'None'}</div>
-          <div class="list-card-sub">Owner: ${item.owner}${dueDateStr} | Updated: ${formatLastUpdated(item.lastUpdated)}</div>
-        </div>
-        <div class="list-card-right">
-          ${getStatusBadge(item)}
-        </div>
-      </div>
-    `;
-  });
-}
-
-function renderAutomations() {
-  const container = document.getElementById('automationsList');
-  if (!container) return;
-  container.innerHTML = '';
-  let items = appData.items.filter(i => i.type === 'automation');
-  if (!showArchived) items = items.filter(i => !i.archived);
-
-  if (items.length === 0) container.innerHTML = '<p style="color:var(--text-muted); font-size:14px;">No automations found.</p>';
-  items.forEach(item => {
-    const dueDateStr = item.dueDate ? ` | Due: ${item.dueDate}` : '';
-    container.innerHTML += `
-      <div class="list-card" onclick="openModal(${item.id})" style="${item.archived ? 'opacity:0.6;' : ''}">
-        <div>
-          <div class="list-card-title">${item.title} <span style="font-size:12px; font-weight:normal; color:var(--text-muted);">(${item.platform || 'Unknown'})</span></div>
-          <div style="font-size: 14px; font-weight: 600; color: var(--color-purple); margin: 6px 0;">Next: ${item.nextAction || 'None'}</div>
-          <div class="list-card-sub">Trigger: ${item.trigger || 'N/A'} → Action: ${item.action || 'N/A'}</div>
-          <div class="list-card-sub" style="margin-top: 4px;">Owner: ${item.owner}${dueDateStr} | Updated: ${formatLastUpdated(item.lastUpdated)}</div>
-        </div>
-        <div class="list-card-right">
-          ${getStatusBadge(item)}
-        </div>
-      </div>
-    `;
-  });
-}
-
-function renderResources() {
-  const container = document.getElementById('resourcesList');
-  if (!container) return;
-  container.innerHTML = '';
-  let items = appData.items.filter(i => i.type === 'resource');
-  if (!showArchived) items = items.filter(i => !i.archived);
-
-  if (items.length === 0) container.innerHTML = '<p style="color:var(--text-muted); font-size:14px;">No resources found.</p>';
+  const items = appData.items.filter(i => i.type === 'task');
+  if (items.length === 0) container.innerHTML = '<p>No tasks yet.</p>';
   items.forEach(item => {
     container.innerHTML += `
-      <div class="list-card" onclick="openModal(${item.id})" style="${item.archived ? 'opacity:0.6;' : ''}">
+      <div class="list-card" onclick="openModal(${item.id})">
         <div>
           <div class="list-card-title">${item.title}</div>
-          <div class="list-card-sub">Category: ${item.category || 'Uncategorized'} | Link: <a href="${item.link || '#'}" target="_blank" onclick="event.stopPropagation();">${item.link || 'None'}</a> | Updated: ${formatLastUpdated(item.lastUpdated)}</div>
+          <div class="list-card-sub">Next: ${item.nextAction} | Owner: ${item.owner}</div>
+        </div>
+        <div class="list-card-right">
+          ${getStatusBadge(item.status)}
+          ${isStale(item) ? '<div class="stale-warning" style="justify-content:flex-end;">⚠ Stale</div>' : ''}
         </div>
       </div>
     `;
@@ -1221,56 +980,25 @@ function renderResources() {
 function renderMyWork() {
   const prioContainer = document.getElementById('myWorkPriority');
   const otherContainer = document.getElementById('myWorkOther');
-  const selectEl = document.getElementById('myWorkUserSelect');
   prioContainer.innerHTML = '';
   otherContainer.innerHTML = '';
 
-  // Extract all unique owners
-  const owners = [...new Set(appData.items.map(i => i.owner).filter(Boolean))].sort();
-
-  // Store the current selection to retain it after re-render if it still exists
-  let currentSelection = selectEl.value;
-
-  // Repopulate dropdown
-  selectEl.innerHTML = '';
-  if (owners.length === 0) {
-    selectEl.innerHTML = '<option value="">No Owners Found</option>';
-  } else {
-    owners.forEach(owner => {
-      const option = document.createElement('option');
-      option.value = owner;
-      option.textContent = owner;
-      selectEl.appendChild(option);
-    });
-
-    if (currentSelection && owners.includes(currentSelection)) {
-      selectEl.value = currentSelection;
-    } else {
-      selectEl.value = owners[0];
-    }
-  }
-
-  const selectedOwner = selectEl.value;
-  let myItems = appData.items.filter(i => i.owner === selectedOwner);
-  if (!showArchived) myItems = myItems.filter(i => !i.archived);
-
+  const myItems = appData.items.filter(i => i.owner === 'Rose');
   let hasPrio = false;
   let hasOther = false;
 
   myItems.forEach(item => {
-    const status = getComputedStatus(item);
-    const isPrio = status === 'Delayed' || status === 'Overdue' || status === 'Needs Update' || status === 'At Risk' || status === 'Blocked';
-    const dueDateStr = item.dueDate ? ` | Due: ${item.dueDate}` : '';
+    const isPrio = item.status === 'Delayed' || isStale(item) || item.status === 'At Risk';
     const html = `
       <div class="list-card" onclick="openModal(${item.id})">
         <div>
           <div class="list-card-title">[${item.type.toUpperCase()}] ${item.title}</div>
-          <div style="font-size: 14px; font-weight: 600; color: var(--color-purple); margin: 6px 0;">Next: ${item.nextAction || 'None'}</div>
-          <div class="list-card-sub">Updated: ${formatLastUpdated(item.lastUpdated)}${dueDateStr}</div>
+          <div class="list-card-sub">Next: ${item.nextAction}</div>
         </div>
         <div class="list-card-right">
-          ${getStatusBadge(item)}
+          ${getStatusBadge(item.status)}
           ${item.type === 'pipeline' ? `<div style="font-size:12px; margin-top:4px; color:var(--text-muted)">Stage: ${item.stage}</div>` : ''}
+          ${isStale(item) ? '<div class="stale-warning" style="justify-content:flex-end;">⚠ Stale</div>' : ''}
         </div>
       </div>
     `;
@@ -1322,11 +1050,10 @@ function renderPipeline() {
     col.ondragover = handleDragOver;
     col.ondrop = (e) => handleDrop(e, stage);
 
-    let stageItems = appData.items.filter(i => i.type === 'pipeline' && i.stage === stage);
-    if (!showArchived) stageItems = stageItems.filter(i => !i.archived);
+    const count = appData.items.filter(i => i.type === 'pipeline' && i.stage === stage).length;
+    col.innerHTML = `<h4>${stage} &nbsp;<span style="color:#9ca3af">${count}</span></h4>`;
 
-    col.innerHTML = `<h4>${stage} &nbsp;<span style="color:#9ca3af">${stageItems.length}</span></h4>`;
-
+    const stageItems = appData.items.filter(i => i.type === 'pipeline' && i.stage === stage);
     stageItems.forEach(item => {
       const el = document.createElement('div');
       el.className = 'kanban-item';
@@ -1335,16 +1062,11 @@ function renderPipeline() {
       el.ondragend = handleDragEnd;
       el.onclick = () => openModal(item.id);
 
-      const dueDateStr = item.dueDate ? ` | Due: ${item.dueDate}` : '';
-
       el.innerHTML = `
         <div class="kanban-title">${item.title}</div>
-        <div style="font-size: 13px; font-weight: 600; color: var(--color-purple); margin-bottom: 8px;">
-          Next: ${item.nextAction || 'None'}
-        </div>
-        <div class="kanban-meta" style="margin-bottom: 4px;">Owner: ${item.owner}${dueDateStr}</div>
-        <div class="kanban-meta" style="margin-bottom: 8px;">Updated: ${formatLastUpdated(item.lastUpdated)}</div>
-        ${getStatusBadge(item)}
+        <div class="kanban-meta">Owner: ${item.owner}</div>
+        ${getStatusBadge(item.status)}
+        ${isStale(item) ? '<div class="stale-warning">⚠ Stale (>24h)</div>' : ''}
       `;
       col.appendChild(el);
     });
@@ -1365,128 +1087,22 @@ function openModal(id = null, type = 'task') {
       document.getElementById('itemId').value = item.id;
       document.getElementById('itemType').value = item.type;
       document.getElementById('itemTitle').value = item.title;
-      document.getElementById('itemOwner').value = item.owner || '';
-      document.getElementById('itemStatus').value = item.status || 'On Track';
+      document.getElementById('itemOwner').value = item.owner;
+      document.getElementById('itemStatus').value = item.status;
       if (item.stage) document.getElementById('itemStage').value = item.stage;
       document.getElementById('itemDueDate').value = item.dueDate || '';
-      document.getElementById('itemNextAction').value = item.nextAction || '';
-
-      // Additional fields for Automations / Resources
-      if (document.getElementById('itemTrigger')) document.getElementById('itemTrigger').value = item.trigger || '';
-      if (document.getElementById('itemAction')) document.getElementById('itemAction').value = item.action || '';
-      if (document.getElementById('itemPlatform')) document.getElementById('itemPlatform').value = item.platform || '';
-      if (document.getElementById('itemCategory')) document.getElementById('itemCategory').value = item.category || 'SOPs';
-      if (document.getElementById('itemLink')) document.getElementById('itemLink').value = item.link || '';
-
-      document.getElementById('archiveBtn').style.display = 'block';
-      document.getElementById('archiveBtn').innerText = item.archived ? 'Unarchive' : 'Archive';
-
-      setFormReadOnly(!!item.archived);
-      if (item.archived) {
-        document.getElementById('modalTitle').innerText = 'View Item (Archived)';
-      }
+      document.getElementById('itemNextAction').value = item.nextAction;
+      document.getElementById('itemNotes').value = item.notes || '';
     }
   } else {
     document.getElementById('modalTitle').innerText = 'Add Item';
     document.getElementById('itemId').value = '';
     document.getElementById('itemType').value = type;
-    const currentOwner = document.getElementById('myWorkUserSelect')?.value;
-    document.getElementById('itemOwner').value = currentOwner || 'Rose';
-    document.getElementById('archiveBtn').style.display = 'none';
-    setFormReadOnly(false);
+    document.getElementById('itemOwner').value = 'Rose';
   }
 
-  renderComments(id);
   toggleStageField();
   modal.classList.add('active');
-}
-
-function renderComments(itemId) {
-  const container = document.getElementById('commentsList');
-  container.innerHTML = '';
-
-  if (!itemId) {
-    container.innerHTML = '<div style="font-size:13px; color:var(--text-muted); text-align:center;">Save item first to add notes.</div>';
-    document.getElementById('newCommentInput').disabled = true;
-    document.getElementById('addCommentBtn').disabled = true;
-    return;
-  }
-
-  const item = appData.items.find(i => i.id === itemId);
-  if (!item) return;
-
-  // Migration for old plain text notes
-  if (item.notes && typeof item.notes === 'string') {
-    item.comments = [{
-      author: item.owner || 'System',
-      text: item.notes,
-      timestamp: item.lastUpdated || Date.now()
-    }];
-    item.notes = null; // Clear old format
-    saveData();
-  }
-
-  const comments = item.comments || [];
-
-  if (comments.length === 0) {
-    container.innerHTML = '<div style="font-size:13px; color:var(--text-muted); text-align:center;">No activity yet.</div>';
-  } else {
-    comments.forEach(comment => {
-      container.innerHTML += `
-        <div style="font-size:13px;">
-          <span style="font-weight:600; color:var(--text-main);">${comment.author}</span>
-          <span style="color:var(--text-muted); font-size:11px; margin-left:4px;">${formatLastUpdated(comment.timestamp)}</span>
-          <div style="color:var(--sidebar-text); margin-top:2px;">${comment.text}</div>
-        </div>
-      `;
-    });
-  }
-
-  // Auto-scroll to bottom
-  container.scrollTop = container.scrollHeight;
-
-  document.getElementById('newCommentInput').disabled = !!item.archived;
-  document.getElementById('addCommentBtn').disabled = !!item.archived;
-  document.getElementById('newCommentInput').value = '';
-}
-
-function addComment() {
-  const idStr = document.getElementById('itemId').value;
-  if (!idStr) return;
-  const itemId = parseInt(idStr, 10);
-  const inputEl = document.getElementById('newCommentInput');
-  const text = inputEl.value.trim();
-
-  if (!text) return;
-
-  const item = appData.items.find(i => i.id === itemId);
-  if (item) {
-    if (!item.comments) item.comments = [];
-    item.comments.push({
-      author: document.getElementById('myWorkUserSelect')?.value || 'System',
-      text: text,
-      timestamp: Date.now()
-    });
-    item.lastUpdated = Date.now(); // update item timestamp too
-    saveData();
-    renderComments(itemId);
-
-    // In background, refresh the main view so timestamps update
-    renderAll();
-  }
-}
-
-function archiveItem() {
-  const idStr = document.getElementById('itemId').value;
-  if (!idStr) return;
-  const id = parseInt(idStr, 10);
-  const item = appData.items.find(i => i.id === id);
-  if (item) {
-    item.archived = !item.archived;
-    saveData();
-    closeModal();
-    renderAll();
-  }
 }
 
 function closeModal() {
@@ -1496,60 +1112,33 @@ function closeModal() {
 function toggleStageField() {
   const type = document.getElementById('itemType').value;
   document.getElementById('stageGroup').style.display = type === 'pipeline' ? 'block' : 'none';
-  if (document.getElementById('automationGroup')) document.getElementById('automationGroup').style.display = type === 'automation' ? 'block' : 'none';
-  if (document.getElementById('resourceGroup')) document.getElementById('resourceGroup').style.display = type === 'resource' ? 'block' : 'none';
-
-  // Hide some standard fields for resources if needed, but keeping simple for now
-  if (type === 'resource') {
-    document.getElementById('statusGroup').style.display = 'none';
-    document.getElementById('dueDateGroup').style.display = 'none';
-    document.getElementById('nextActionGroup').style.display = 'none';
-    document.getElementById('itemNextAction').removeAttribute('required');
-  } else {
-    document.getElementById('statusGroup').style.display = 'block';
-    document.getElementById('dueDateGroup').style.display = 'block';
-    document.getElementById('nextActionGroup').style.display = 'block';
-    document.getElementById('itemNextAction').setAttribute('required', 'true');
-  }
 }
 
 document.getElementById('itemForm').addEventListener('submit', function(e) {
   e.preventDefault();
 
   const idStr = document.getElementById('itemId').value;
-  const type = document.getElementById('itemType').value;
   const itemData = {
-    type: type,
+    type: document.getElementById('itemType').value,
     title: document.getElementById('itemTitle').value,
     owner: document.getElementById('itemOwner').value,
     status: document.getElementById('itemStatus').value,
     dueDate: document.getElementById('itemDueDate').value,
     nextAction: document.getElementById('itemNextAction').value,
+    notes: document.getElementById('itemNotes').value,
     lastUpdated: Date.now()
   };
 
-  if (type === 'pipeline') {
+  if (itemData.type === 'pipeline') {
     itemData.stage = document.getElementById('itemStage').value || 'Script';
-  } else if (type === 'automation') {
-    if (document.getElementById('itemTrigger')) itemData.trigger = document.getElementById('itemTrigger').value;
-    if (document.getElementById('itemAction')) itemData.action = document.getElementById('itemAction').value;
-    if (document.getElementById('itemPlatform')) itemData.platform = document.getElementById('itemPlatform').value;
-  } else if (type === 'resource') {
-    if (document.getElementById('itemCategory')) itemData.category = document.getElementById('itemCategory').value;
-    if (document.getElementById('itemLink')) itemData.link = document.getElementById('itemLink').value;
   }
 
   if (idStr) {
     const id = parseInt(idStr, 10);
     const index = appData.items.findIndex(i => i.id === id);
-    if (index !== -1) {
-      // Preserve comments array
-      const existingComments = appData.items[index].comments || [];
-      appData.items[index] = { ...appData.items[index], ...itemData, comments: existingComments };
-    }
+    if (index !== -1) appData.items[index] = { ...appData.items[index], ...itemData };
   } else {
     itemData.id = generateId();
-    itemData.comments = []; // start empty
     appData.items.push(itemData);
   }
 
@@ -1558,101 +1147,24 @@ document.getElementById('itemForm').addEventListener('submit', function(e) {
   renderAll();
 });
 
-
-// --- KPI Logic ---
-function openKpiModal() {
-  const container = document.getElementById('kpiInputsContainer');
-  container.innerHTML = '';
-  for (const [key, val] of Object.entries(appData.kpis)) {
-    // Only allow editing custom KPIs, exclude 'Broken Automations'
-    if (key === 'Broken Automations') continue;
-    addKpiField(key, val, key === 'Leads Today');
-  }
-  document.getElementById('kpiModal').classList.add('active');
-}
-
-function closeKpiModal() {
-  document.getElementById('kpiModal').classList.remove('active');
-}
-
-function addKpiField(key = '', val = '', isSystem = false) {
-  const container = document.getElementById('kpiInputsContainer');
-  const div = document.createElement('div');
-  div.style.display = 'flex';
-  div.style.gap = '8px';
-  div.style.marginBottom = '8px';
-
-  if (isSystem) {
-    div.innerHTML = `
-      <input type="text" placeholder="KPI Name" value="${key}" class="kpi-key" style="flex:1;" readonly>
-      <input type="text" placeholder="Value" value="${val}" class="kpi-val" style="flex:1;" required>
-      <button type="button" class="btn-outline" style="padding:0 12px; visibility:hidden;">X</button>
-    `;
-  } else {
-    div.innerHTML = `
-      <input type="text" placeholder="KPI Name" value="${key}" class="kpi-key" style="flex:1;" required>
-      <input type="text" placeholder="Value" value="${val}" class="kpi-val" style="flex:1;" required>
-      <button type="button" class="btn-outline" style="padding:0 12px;" onclick="this.parentElement.remove()">X</button>
-    `;
-  }
-  container.appendChild(div);
-}
-
-document.getElementById('kpiForm').addEventListener('submit', function(e) {
-  e.preventDefault();
-  const keys = document.querySelectorAll('.kpi-key');
-  const vals = document.querySelectorAll('.kpi-val');
-
-  // Keep internal KPI references that aren't editable via modal
-  const newKpis = {
-    'Broken Automations': appData.kpis['Broken Automations'] || 0
-  };
-
-  for(let i=0; i<keys.length; i++) {
-    const k = keys[i].value.trim();
-    const v = vals[i].value.trim();
-    if(k) newKpis[k] = v;
-  }
-
-  appData.kpis = newKpis;
-  saveData();
-  closeKpiModal();
-  renderAll();
-});
-
 // --- Reports ---
-
 function generateReport() {
   const dateStr = new Date().toLocaleDateString();
   const delayedItems = appData.items.filter(i => i.status === 'Delayed');
   const onTrackItems = appData.items.filter(i => i.status === 'On Track');
   const atRiskItems = appData.items.filter(i => i.status === 'At Risk');
 
-  let reportText = `DAILY REPORT - ${dateStr}
-`;
-  reportText += `==============================
+  let reportText = `DAILY REPORT - ${dateStr}\n`;
+  reportText += `==============================\n\n`;
 
-`;
+  reportText += `🚨 OVERDUE / DELAYED (${delayedItems.length}):\n`;
+  delayedItems.forEach(i => reportText += `- [${i.type.toUpperCase()}] ${i.title} (Owner: ${i.owner})\n  Next: ${i.nextAction}\n`);
 
-  reportText += `🚨 OVERDUE / DELAYED (${delayedItems.length}):
-`;
-  delayedItems.forEach(i => reportText += `- [${i.type.toUpperCase()}] ${i.title} (Owner: ${i.owner})
-  Next: ${i.nextAction}
-`);
+  reportText += `\n⚠️ AT RISK (${atRiskItems.length}):\n`;
+  atRiskItems.forEach(i => reportText += `- [${i.type.toUpperCase()}] ${i.title} (Owner: ${i.owner})\n  Next: ${i.nextAction}\n`);
 
-  reportText += `
-⚠️ AT RISK (${atRiskItems.length}):
-`;
-  atRiskItems.forEach(i => reportText += `- [${i.type.toUpperCase()}] ${i.title} (Owner: ${i.owner})
-  Next: ${i.nextAction}
-`);
-
-  reportText += `
-✅ ON TRACK (${onTrackItems.length}):
-`;
-  onTrackItems.forEach(i => reportText += `- [${i.type.toUpperCase()}] ${i.title} (Owner: ${i.owner})
-  Next: ${i.nextAction}
-`);
+  reportText += `\n✅ ON TRACK (${onTrackItems.length}):\n`;
+  onTrackItems.forEach(i => reportText += `- [${i.type.toUpperCase()}] ${i.title} (Owner: ${i.owner})\n  Next: ${i.nextAction}\n`);
 
   document.getElementById('reportContent').innerText = reportText;
   document.getElementById('reportModal').classList.add('active');
@@ -1669,3 +1181,7 @@ document.addEventListener('DOMContentLoaded', renderAll);
 
 </body>
 </html>
+"""
+
+with open("index.html", "w") as f:
+    f.write(html_content)

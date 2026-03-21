@@ -601,6 +601,10 @@ button:hover {
     Resources
   </div>
   <div style="flex: 1;"></div>
+  <div class="nav-item" onclick="openResetModal()" style="color:var(--text-muted);">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"></polyline><polyline points="23 20 23 14 17 14"></polyline><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path></svg>
+    Reset Demo Data
+  </div>
   <div class="nav-item" onclick="toggleArchived()" id="toggleArchiveSidebar" style="color:var(--text-muted);">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"></polyline><rect x="1" y="3" width="22" height="5"></rect><line x1="10" y1="12" x2="14" y2="12"></line></svg>
     Show Archived
@@ -898,6 +902,22 @@ button:hover {
   </div>
 </div>
 
+<!-- Modal: Reset Demo Data -->
+<div class="modal-overlay" id="resetModal">
+  <div class="modal-content">
+    <h2>Reset Demo Data</h2>
+    <p style="font-size: 14px; color: var(--sidebar-text); line-height: 1.5;">
+      Are you sure you want to reset the app to its original sample data?
+      <br><br>
+      <strong>This will delete all your current tasks, campaigns, pipeline items, and custom KPIs. This action cannot be undone.</strong>
+    </p>
+    <div class="modal-actions">
+      <button type="button" class="btn-outline" onclick="closeResetModal()">Cancel</button>
+      <button type="button" onclick="confirmResetDemoData()" style="background: var(--color-red);">Reset</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // --- UI Helpers ---
 // setDate removed for exact screenshot matching
@@ -934,7 +954,7 @@ const defaultData = {
 
 let appData = JSON.parse(localStorage.getItem('leadFlowData'));
 if (!appData) {
-  appData = defaultData;
+  appData = JSON.parse(JSON.stringify(defaultData));
   saveData();
 }
 
@@ -1712,6 +1732,23 @@ function generateReport() {
 
 function closeReportModal() {
   document.getElementById('reportModal').classList.remove('active');
+}
+
+// --- Reset Demo Data ---
+
+function openResetModal() {
+  document.getElementById('resetModal').classList.add('active');
+}
+
+function closeResetModal() {
+  document.getElementById('resetModal').classList.remove('active');
+}
+
+function confirmResetDemoData() {
+  appData = JSON.parse(JSON.stringify(defaultData));
+  saveData();
+  closeResetModal();
+  renderAll();
 }
 
 // Init

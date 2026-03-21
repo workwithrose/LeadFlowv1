@@ -756,6 +756,14 @@ button:hover {
         <input type="text" id="itemOwner" required>
       </div>
 
+      <!-- Campaign Specific Fields -->
+      <div id="campaignGroup" style="display:none;">
+        <div class="form-group">
+          <label>Leads Count</label>
+          <input type="number" id="itemLeadsCount" min="0" value="0">
+        </div>
+      </div>
+
       <!-- Automation Specific Fields -->
       <div id="automationGroup" style="display:none;">
         <div class="form-group">
@@ -826,7 +834,10 @@ button:hover {
         </div>
       </div>
       <div class="modal-actions" style="justify-content: space-between;">
-        <button type="button" class="btn-outline" id="archiveBtn" onclick="archiveItem()" style="color:var(--color-red); border-color:var(--color-red-bg); display:none;">Archive</button>
+        <div style="display:flex; gap:12px;">
+          <button type="button" class="btn-outline" id="archiveBtn" onclick="archiveItem()" style="display:none;">Archive</button>
+          <button type="button" class="btn-outline" id="deleteBtn" onclick="deleteItem()" style="color:var(--color-red); border-color:var(--color-red-bg); display:none;">Delete Permanently</button>
+        </div>
         <div style="display:flex; gap:12px;">
           <button type="button" class="btn-outline" onclick="closeModal()">Cancel</button>
           <button type="submit" id="saveItemBtn">Save Item</button>
@@ -986,14 +997,20 @@ function formatLastUpdated(timestamp) {
 }
 
 function renderDashboard() {
-  const activeCampaigns = appData.items.filter(i => i.type === 'campaign' && i.status !== 'Delayed').length;
-  const totalCampaigns = appData.items.filter(i => i.type === 'campaign').length;
-  const overdueTasks = appData.items.filter(i => i.type === 'task' && i.status === 'Delayed').length;
+  const allActiveItems = appData.items.filter(i => !i.archived);
+
+  const activeCampaigns = allActiveItems.filter(i => i.type === 'campaign' && i.status !== 'Delayed').length;
+  const totalCampaigns = allActiveItems.filter(i => i.type === 'campaign').length;
+  const overdueTasks = allActiveItems.filter(i => i.type === 'task' && (i.status === 'Delayed' || isOverdue(i))).length;
 
 
   let topStatsHtml = '';
 
-  let leadsTodayVal = appData.kpis['Leads Today'] !== undefined ? appData.kpis['Leads Today'] : 8;
+  const activeCampaignsList = appData.items.filter(i => i.type === 'campaign' && i.status !== 'Delayed' && !i.archived);
+  let leadsTodayVal = activeCampaignsList.reduce((sum, camp) => sum + (parseInt(camp.leadsCount) || 0), 0);
+
+  // If the legacy hardcoded KPI still exists and we have no dynamic leads, default to 0.
+  // We can just trust the calculation entirely now.
 
   topStatsHtml += `
     <div class="card stat-card">
@@ -1127,12 +1144,13 @@ function renderCampaigns() {
   if (items.length === 0) container.innerHTML = '<p style="color:var(--text-muted); font-size:14px;">No campaigns found.</p>';
   items.forEach(item => {
     const dueDateStr = item.dueDate ? ` | Due: ${item.dueDate}` : '';
+    const leadsStr = item.leadsCount !== undefined ? ` | Leads: ${item.leadsCount}` : '';
     container.innerHTML += `
       <div class="list-card" onclick="openModal(${item.id})" style="${item.archived ? 'opacity:0.6;' : ''}">
         <div>
           <div class="list-card-title">${item.title} ${item.archived ? '(Archived)' : ''}</div>
           <div style="font-size: 14px; font-weight: 600; color: var(--color-purple); margin: 6px 0;">Next: ${item.nextAction || 'None'}</div>
-          <div class="list-card-sub">Owner: ${item.owner}${dueDateStr} | Updated: ${formatLastUpdated(item.lastUpdated)}</div>
+          <div class="list-card-sub">Owner: ${item.owner}${dueDateStr}${leadsStr} | Updated: ${formatLastUpdated(item.lastUpdated)}</div>
         </div>
         <div class="list-card-right">
           ${getStatusBadge(item)}
@@ -1371,9 +1389,11 @@ function openModal(id = null, type = 'task') {
       if (document.getElementById('itemPlatform')) document.getElementById('itemPlatform').value = item.platform || '';
       if (document.getElementById('itemCategory')) document.getElementById('itemCategory').value = item.category || 'SOPs';
       if (document.getElementById('itemLink')) document.getElementById('itemLink').value = item.link || '';
+      if (document.getElementById('itemLeadsCount')) document.getElementById('itemLeadsCount').value = item.leadsCount || 0;
 
       document.getElementById('archiveBtn').style.display = 'block';
       document.getElementById('archiveBtn').innerText = item.archived ? 'Unarchive' : 'Archive';
+      document.getElementById('deleteBtn').style.display = item.archived ? 'block' : 'none';
 
       setFormReadOnly(!!item.archived);
       if (item.archived) {
@@ -1387,6 +1407,7 @@ function openModal(id = null, type = 'task') {
     const currentOwner = document.getElementById('myWorkUserSelect')?.value;
     document.getElementById('itemOwner').value = currentOwner || 'Rose';
     document.getElementById('archiveBtn').style.display = 'none';
+    document.getElementById('deleteBtn').style.display = 'none';
     setFormReadOnly(false);
   }
 
@@ -1470,6 +1491,18 @@ function addComment() {
   }
 }
 
+function deleteItem() {
+  const idStr = document.getElementById('itemId').value;
+  if (!idStr) return;
+  if (confirm("Are you sure you want to permanently delete this item? This action cannot be undone.")) {
+    const id = parseInt(idStr, 10);
+    appData.items = appData.items.filter(i => i.id !== id);
+    saveData();
+    closeModal();
+    renderAll();
+  }
+}
+
 function archiveItem() {
   const idStr = document.getElementById('itemId').value;
   if (!idStr) return;
@@ -1492,6 +1525,7 @@ function toggleStageField() {
   document.getElementById('stageGroup').style.display = type === 'pipeline' ? 'block' : 'none';
   if (document.getElementById('automationGroup')) document.getElementById('automationGroup').style.display = type === 'automation' ? 'block' : 'none';
   if (document.getElementById('resourceGroup')) document.getElementById('resourceGroup').style.display = type === 'resource' ? 'block' : 'none';
+  if (document.getElementById('campaignGroup')) document.getElementById('campaignGroup').style.display = type === 'campaign' ? 'block' : 'none';
 
   // Hide some standard fields for resources if needed, but keeping simple for now
   if (type === 'resource') {
@@ -1531,6 +1565,8 @@ document.getElementById('itemForm').addEventListener('submit', function(e) {
   } else if (type === 'resource') {
     if (document.getElementById('itemCategory')) itemData.category = document.getElementById('itemCategory').value;
     if (document.getElementById('itemLink')) itemData.link = document.getElementById('itemLink').value;
+  } else if (type === 'campaign') {
+    if (document.getElementById('itemLeadsCount')) itemData.leadsCount = parseInt(document.getElementById('itemLeadsCount').value, 10) || 0;
   }
 
   if (idStr) {

@@ -986,14 +986,20 @@ function formatLastUpdated(timestamp) {
 }
 
 function renderDashboard() {
-  const activeCampaigns = appData.items.filter(i => i.type === 'campaign' && i.status !== 'Delayed').length;
-  const totalCampaigns = appData.items.filter(i => i.type === 'campaign').length;
-  const overdueTasks = appData.items.filter(i => i.type === 'task' && i.status === 'Delayed').length;
+  const allActiveItems = appData.items.filter(i => !i.archived);
+
+  const activeCampaigns = allActiveItems.filter(i => i.type === 'campaign' && i.status !== 'Delayed').length;
+  const totalCampaigns = allActiveItems.filter(i => i.type === 'campaign').length;
+  const overdueTasks = allActiveItems.filter(i => i.type === 'task' && (i.status === 'Delayed' || isOverdue(i))).length;
 
 
   let topStatsHtml = '';
 
-  let leadsTodayVal = appData.kpis['Leads Today'] !== undefined ? appData.kpis['Leads Today'] : 8;
+  const activeCampaignsList = appData.items.filter(i => i.type === 'campaign' && i.status !== 'Delayed' && !i.archived);
+  let leadsTodayVal = activeCampaignsList.reduce((sum, camp) => sum + (parseInt(camp.leadsCount) || 0), 0);
+
+  // If the legacy hardcoded KPI still exists and we have no dynamic leads, default to 0.
+  // We can just trust the calculation entirely now.
 
   topStatsHtml += `
     <div class="card stat-card">

@@ -4,110 +4,329 @@
 <meta charset="UTF-8">
 <title>LeadFlow OS</title>
 <style>
+:root {
+  --bg-color: #f9fafb;
+  --sidebar-bg: #111827;
+  --sidebar-hover: #374151;
+  --sidebar-text: #f3f4f6;
+  --sidebar-active: #4f46e5;
+  --card-bg: #ffffff;
+  --text-main: #1f2937;
+  --text-muted: #6b7280;
+  --border-color: #e5e7eb;
+
+  --color-green: #10b981;
+  --color-green-bg: #d1fae5;
+  --color-yellow: #f59e0b;
+  --color-yellow-bg: #fef3c7;
+  --color-red: #ef4444;
+  --color-red-bg: #fee2e2;
+
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --radius: 8px;
+}
+
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   display: flex;
-  background: #f5f6fa;
+  background: var(--bg-color);
+  color: var(--text-main);
+  height: 100vh;
+  overflow: hidden;
+}
+
+* {
+  box-sizing: border-box;
 }
 
 .sidebar {
-  width: 220px;
-  background: #1e1e2f;
-  color: white;
+  width: 240px;
+  background: var(--sidebar-bg);
+  color: var(--sidebar-text);
   height: 100vh;
-  padding: 20px;
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .sidebar h2 {
-  font-size: 18px;
-  margin-bottom: 20px;
+  font-size: 20px;
+  margin: 0 0 24px 8px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
 }
 
 .sidebar div {
-  margin: 10px 0;
+  padding: 10px 12px;
   cursor: pointer;
+  border-radius: var(--radius);
+  transition: all 0.2s ease;
+  font-size: 14px;
+  font-weight: 500;
+  color: #9ca3af;
+}
+
+.sidebar div:hover {
+  background: var(--sidebar-hover);
+  color: white;
+}
+
+.sidebar div.active {
+  background: var(--sidebar-active);
+  color: white;
 }
 
 .main {
   flex: 1;
-  padding: 20px;
+  padding: 32px 40px;
+  overflow-y: auto;
+}
+
+h2 {
+  font-size: 24px;
+  margin-top: 0;
+  margin-bottom: 24px;
+  font-weight: 600;
+}
+
+h3 {
+  font-size: 18px;
+  margin-top: 24px;
+  margin-bottom: 16px;
+  font-weight: 600;
+}
+
+h4 {
+  font-size: 14px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+  margin-top: 0;
+  margin-bottom: 12px;
 }
 
 .card {
-  background: white;
-  padding: 15px;
-  margin-bottom: 15px;
-  border-radius: 8px;
+  background: var(--card-bg);
+  padding: 20px;
+  margin-bottom: 16px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
 }
 
-.status-green { color: green; font-weight: bold; }
-.status-yellow { color: orange; font-weight: bold; }
-.status-red { color: red; font-weight: bold; }
+.status-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+  margin: 4px 0;
+}
+
+.status-green { color: var(--color-green); background: var(--color-green-bg); }
+.status-yellow { color: var(--color-yellow); background: var(--color-yellow-bg); }
+.status-red { color: var(--color-red); background: var(--color-red-bg); }
 
 .pipeline {
   display: flex;
-  gap: 10px;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 16px;
 }
 
 .column {
-  background: #eaeaea;
-  padding: 10px;
+  background: #f3f4f6;
+  padding: 16px;
+  min-width: 260px;
   flex: 1;
-  border-radius: 6px;
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .item {
-  background: white;
-  padding: 10px;
-  margin-bottom: 10px;
-  border-radius: 6px;
+  background: var(--card-bg);
+  padding: 16px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  font-size: 14px;
+  line-height: 1.5;
+  cursor: grab;
 }
+
+.item:active {
+  cursor: grabbing;
+}
+
+.stale-warning {
+  color: var(--color-red);
+  font-weight: 600;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+button {
+  background: var(--sidebar-active);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: opacity 0.2s;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+}
+.btn-outline:hover {
+  background: #f9fafb;
+}
+
+.header-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+.header-actions h2 {
+  margin-bottom: 0;
+}
+
+/* Modals */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+
+.modal-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal-content {
+  background: var(--card-bg);
+  padding: 32px;
+  border-radius: var(--radius);
+  width: 100%;
+  max-width: 500px;
+  box-shadow: var(--shadow-md);
+}
+
+.modal-content h2 {
+  margin-top: 0;
+  margin-bottom: 24px;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
 </style>
 </head>
 
 <body>
 
-<div class="sidebar">
+<div class="sidebar" id="sidebar">
   <h2>LeadFlow OS</h2>
-  <div onclick="showTab('dashboard')">Dashboard</div>
-  <div onclick="showTab('campaigns')">Campaigns</div>
-  <div onclick="showTab('pipeline')">Pipeline</div>
-  <div onclick="showTab('tasks')">Tasks</div>
-  <div onclick="showTab('mywork')">My Work</div>
-  <div onclick="showTab('automations')">Automations</div>
-  <div onclick="showTab('resources')">Resources</div>
+  <div class="nav-item active" onclick="showTab('dashboard', this)">Dashboard</div>
+  <div class="nav-item" onclick="showTab('campaigns', this)">Campaigns</div>
+  <div class="nav-item" onclick="showTab('pipeline', this)">Pipeline</div>
+  <div class="nav-item" onclick="showTab('tasks', this)">Tasks</div>
+  <div class="nav-item" onclick="showTab('mywork', this)">My Work</div>
+  <div class="nav-item" onclick="showTab('automations', this)">Automations</div>
+  <div class="nav-item" onclick="showTab('resources', this)">Resources</div>
 </div>
 
 <div class="main">
 
 <!-- DASHBOARD -->
 <div id="dashboard" class="tab">
-  <h2>Dashboard</h2>
+  <div class="header-actions">
+    <h2>Dashboard</h2>
+    <button onclick="generateReport()">Generate Daily Report</button>
+  </div>
+
+  <div class="grid" id="dashboardStats">
+    <!-- Stats rendered dynamically -->
+  </div>
 
   <div class="grid">
-    <div class="card">Leads Today: 12</div>
-    <div class="card">Active Campaigns: 5</div>
-    <div class="card">Videos in Production: 8</div>
-    <div class="card">Overdue Tasks: 2</div>
-  </div>
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="margin-top:0;">Editable KPIs</h3>
+        <button class="btn-outline" style="padding: 4px 8px; font-size:12px;" onclick="openKpiModal()">Edit</button>
+      </div>
+      <div id="kpiList">
+        <!-- KPIs rendered dynamically -->
+      </div>
+    </div>
 
-  <div class="card">
-    <h3>Editable KPIs</h3>
-    <p>Appointments Booked: 4</p>
-    <p>Close Rate: 20%</p>
-  </div>
-
-  <div class="card">
-    <h3>Alerts</h3>
-    <p class="status-red">⚠ Task not updated in 24h</p>
-    <p class="status-red">⚠ Campaign delayed</p>
+    <div class="card">
+      <h3 style="margin-top:0;">Alerts</h3>
+      <div id="alertsList">
+        <!-- Alerts rendered dynamically -->
+      </div>
+    </div>
   </div>
 </div>
 
@@ -125,26 +344,13 @@ body {
 
 <!-- PIPELINE -->
 <div id="pipeline" class="tab" style="display:none;">
-  <h2>Production Pipeline</h2>
+  <div class="header-actions">
+    <h2>Production Pipeline</h2>
+    <button onclick="openModal()">+ Add Item</button>
+  </div>
 
-  <div class="pipeline">
-    <div class="column">
-      <h4>Editing</h4>
-      <div class="item">
-        Video #1 <br>
-        <span class="status-yellow">At Risk</span><br>
-        Next: Add captions<br>
-      </div>
-    </div>
-
-    <div class="column">
-      <h4>Review</h4>
-      <div class="item">
-        Video #2 <br>
-        <span class="status-green">On Track</span><br>
-        Next: Approve video<br>
-      </div>
-    </div>
+  <div class="pipeline" id="pipelineContainer">
+    <!-- Pipeline columns will be dynamically rendered here -->
   </div>
 </div>
 
@@ -162,21 +368,16 @@ body {
 
 <!-- MY WORK -->
 <div id="mywork" class="tab" style="display:none;">
-  <h2>My Work</h2>
+  <div class="header-actions">
+    <h2>My Work (Rose)</h2>
+    <button onclick="openModal()">+ Add Item</button>
+  </div>
 
   <h3>Priority / Needs Attention</h3>
-  <div class="card">
-    Fix Campaign Issue <br>
-    <span class="status-red">Delayed</span><br>
-    Next: Update targeting
-  </div>
+  <div id="myWorkPriority"></div>
 
   <h3>All Other Work</h3>
-  <div class="card">
-    Edit Video #3 <br>
-    <span class="status-green">On Track</span><br>
-    Next: Add transitions
-  </div>
+  <div id="myWorkOther"></div>
 </div>
 
 <!-- AUTOMATIONS -->
@@ -207,12 +408,500 @@ body {
 
 </div>
 
+<!-- Modal: Generate Report -->
+<div class="modal-overlay" id="reportModal">
+  <div class="modal-content">
+    <h2>Daily Report</h2>
+    <div id="reportContent" style="background:#f9fafb; padding:16px; border-radius:8px; border:1px solid var(--border-color); white-space: pre-wrap; font-family: monospace; font-size: 14px; max-height: 400px; overflow-y:auto; line-height: 1.5;"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn-outline" onclick="closeReportModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Edit KPIs -->
+<div class="modal-overlay" id="kpiModal">
+  <div class="modal-content">
+    <h2>Edit KPIs</h2>
+    <form id="kpiForm">
+      <div id="kpiInputsContainer"></div>
+      <div style="margin-top:16px; margin-bottom: 16px;">
+        <button type="button" class="btn-outline" style="font-size:12px; padding: 4px 8px;" onclick="addKpiField()">+ Add KPI</button>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-outline" onclick="closeKpiModal()">Cancel</button>
+        <button type="submit">Save KPIs</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Add/Edit Item -->
+<div class="modal-overlay" id="itemModal">
+  <div class="modal-content">
+    <h2 id="modalTitle">Add Item</h2>
+    <form id="itemForm">
+      <input type="hidden" id="itemId">
+      <div class="form-group">
+        <label>Type</label>
+        <select id="itemType" required onchange="toggleStageField()">
+          <option value="task">Task</option>
+          <option value="campaign">Campaign</option>
+          <option value="pipeline">Pipeline Item</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Title</label>
+        <input type="text" id="itemTitle" required>
+      </div>
+      <div class="form-group">
+        <label>Owner</label>
+        <input type="text" id="itemOwner" required>
+      </div>
+      <div class="form-group">
+        <label>Status</label>
+        <select id="itemStatus" required>
+          <option value="On Track">On Track</option>
+          <option value="At Risk">At Risk</option>
+          <option value="Delayed">Delayed</option>
+        </select>
+      </div>
+      <div class="form-group" id="stageGroup" style="display:none;">
+        <label>Stage (Pipeline only)</label>
+        <select id="itemStage">
+          <option value="Script">Script</option>
+          <option value="Filming">Filming</option>
+          <option value="Editing">Editing</option>
+          <option value="Review">Review</option>
+          <option value="Approved">Approved</option>
+          <option value="Uploaded">Uploaded</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Due Date</label>
+        <input type="date" id="itemDueDate">
+      </div>
+      <div class="form-group">
+        <label>Next Action (Required)</label>
+        <input type="text" id="itemNextAction" required>
+      </div>
+      <div class="form-group">
+        <label>Notes</label>
+        <textarea id="itemNotes" rows="3"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-outline" onclick="closeModal()">Cancel</button>
+        <button type="submit">Save Item</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script>
-function showTab(tabId) {
+function showTab(tabId, element) {
   const tabs = document.querySelectorAll('.tab');
   tabs.forEach(tab => tab.style.display = 'none');
   document.getElementById(tabId).style.display = 'block';
+
+  if (element) {
+    const navItems = document.querySelectorAll('.sidebar .nav-item');
+    navItems.forEach(item => item.classList.remove('active'));
+    element.classList.add('active');
+  }
 }
+
+// Data Model & LocalStorage
+const defaultData = {
+  kpis: {
+    appointmentsBooked: 4,
+    closeRate: "20%"
+  },
+  items: [
+    { id: 1, type: 'campaign', title: 'Plumbing Co', owner: 'Rose', status: 'On Track', dueDate: '2023-12-01', nextAction: 'Monitor leads', notes: '', lastUpdated: Date.now() },
+    { id: 2, type: 'pipeline', title: 'Video #1', stage: 'Editing', owner: 'Alex', status: 'At Risk', dueDate: '2023-11-20', nextAction: 'Add captions', notes: '', lastUpdated: Date.now() },
+    { id: 3, type: 'pipeline', title: 'Video #2', stage: 'Review', owner: 'Rose', status: 'On Track', dueDate: '2023-11-25', nextAction: 'Approve video', notes: '', lastUpdated: Date.now() - (48 * 60 * 60 * 1000) },
+    { id: 4, type: 'task', title: 'Launch Campaign', owner: 'Rose', status: 'Delayed', dueDate: '2023-11-15', nextAction: 'Upload video', notes: '', lastUpdated: Date.now() - (48 * 60 * 60 * 1000) },
+    { id: 5, type: 'task', title: 'Fix Campaign Issue', owner: 'Rose', status: 'Delayed', dueDate: '2023-11-16', nextAction: 'Update targeting', notes: '', lastUpdated: Date.now() },
+    { id: 6, type: 'task', title: 'Edit Video #3', owner: 'Rose', status: 'On Track', dueDate: '2023-11-28', nextAction: 'Add transitions', notes: '', lastUpdated: Date.now() }
+  ]
+};
+
+let appData = JSON.parse(localStorage.getItem('leadFlowData'));
+if (!appData) {
+  appData = defaultData;
+  saveData();
+}
+
+function saveData() {
+  localStorage.setItem('leadFlowData', JSON.stringify(appData));
+}
+
+function generateId() {
+  return appData.items.length > 0 ? Math.max(...appData.items.map(i => i.id)) + 1 : 1;
+}
+
+// Modal Logic
+function openModal(id = null) {
+  const modal = document.getElementById('itemModal');
+  const form = document.getElementById('itemForm');
+  form.reset();
+
+  if (id) {
+    document.getElementById('modalTitle').innerText = 'Edit Item';
+    const item = appData.items.find(i => i.id === id);
+    if (item) {
+      document.getElementById('itemId').value = item.id;
+      document.getElementById('itemType').value = item.type;
+      document.getElementById('itemTitle').value = item.title;
+      document.getElementById('itemOwner').value = item.owner;
+      document.getElementById('itemStatus').value = item.status;
+      if (item.stage) document.getElementById('itemStage').value = item.stage;
+      document.getElementById('itemDueDate').value = item.dueDate || '';
+      document.getElementById('itemNextAction').value = item.nextAction;
+      document.getElementById('itemNotes').value = item.notes || '';
+    }
+  } else {
+    document.getElementById('modalTitle').innerText = 'Add Item';
+    document.getElementById('itemId').value = '';
+    // default owner to Rose for testing 'My Work' logic
+    document.getElementById('itemOwner').value = 'Rose';
+  }
+
+  toggleStageField();
+  modal.classList.add('active');
+}
+
+function closeModal() {
+  document.getElementById('itemModal').classList.remove('active');
+}
+
+function toggleStageField() {
+  const type = document.getElementById('itemType').value;
+  document.getElementById('stageGroup').style.display = type === 'pipeline' ? 'block' : 'none';
+}
+
+document.getElementById('itemForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+
+  const idStr = document.getElementById('itemId').value;
+  const itemData = {
+    type: document.getElementById('itemType').value,
+    title: document.getElementById('itemTitle').value,
+    owner: document.getElementById('itemOwner').value,
+    status: document.getElementById('itemStatus').value,
+    dueDate: document.getElementById('itemDueDate').value,
+    nextAction: document.getElementById('itemNextAction').value,
+    notes: document.getElementById('itemNotes').value,
+    lastUpdated: Date.now()
+  };
+
+  if (itemData.type === 'pipeline') {
+    itemData.stage = document.getElementById('itemStage').value;
+  }
+
+  if (idStr) {
+    const id = parseInt(idStr, 10);
+    const index = appData.items.findIndex(i => i.id === id);
+    if (index !== -1) {
+      appData.items[index] = { ...appData.items[index], ...itemData };
+    }
+  } else {
+    itemData.id = generateId();
+    appData.items.push(itemData);
+  }
+
+  saveData();
+  closeModal();
+  renderAll(); // Will implement rendering next
+});
+
+function renderAll() {
+  renderDashboard();
+  renderPipeline();
+  renderMyWork();
+  // Call other rendering functions here as we build them
+}
+
+function renderDashboard() {
+  const activeCampaigns = appData.items.filter(i => i.type === 'campaign' && i.status !== 'Delayed').length;
+  const videosInProd = appData.items.filter(i => i.type === 'pipeline' && i.stage !== 'Uploaded').length;
+  const overdueTasks = appData.items.filter(i => i.type === 'task' && i.status === 'Delayed').length;
+
+  document.getElementById('dashboardStats').innerHTML = `
+    <div class="card">
+      <h4 style="margin:0; margin-bottom: 8px;">Leads Today</h4>
+      <div style="font-size: 24px; font-weight: bold;">12</div>
+    </div>
+    <div class="card">
+      <h4 style="margin:0; margin-bottom: 8px;">Active Campaigns</h4>
+      <div style="font-size: 24px; font-weight: bold;">${activeCampaigns}</div>
+    </div>
+    <div class="card">
+      <h4 style="margin:0; margin-bottom: 8px;">Videos in Prod</h4>
+      <div style="font-size: 24px; font-weight: bold;">${videosInProd}</div>
+    </div>
+    <div class="card">
+      <h4 style="margin:0; margin-bottom: 8px;">Overdue Tasks</h4>
+      <div style="font-size: 24px; font-weight: bold; color: var(--color-red);">${overdueTasks}</div>
+    </div>
+  `;
+
+  // Render KPIs
+  const kpiList = document.getElementById('kpiList');
+  kpiList.innerHTML = '';
+  for (const [key, val] of Object.entries(appData.kpis)) {
+    kpiList.innerHTML += `<div style="display:flex; justify-content:space-between; padding: 8px 0; border-bottom: 1px solid var(--border-color);">
+      <span style="color:var(--text-muted); text-transform:capitalize;">${key.replace(/([A-Z])/g, ' $1').trim()}</span>
+      <span style="font-weight:600;">${val}</span>
+    </div>`;
+  }
+
+  // Render Alerts
+  const alertsList = document.getElementById('alertsList');
+  alertsList.innerHTML = '';
+  const staleItems = appData.items.filter(i => Date.now() - i.lastUpdated > 24 * 60 * 60 * 1000);
+  const delayedItems = appData.items.filter(i => i.status === 'Delayed');
+
+  if (staleItems.length === 0 && delayedItems.length === 0) {
+    alertsList.innerHTML = '<p style="color:var(--color-green);">All good! No alerts.</p>';
+  } else {
+    staleItems.forEach(item => {
+      alertsList.innerHTML += `<p class="stale-warning" style="margin-top:0; margin-bottom:8px;">⚠ ${item.title} not updated in 24h</p>`;
+    });
+    delayedItems.forEach(item => {
+      alertsList.innerHTML += `<p class="stale-warning" style="margin-top:0; margin-bottom:8px;">⚠ ${item.title} is delayed</p>`;
+    });
+  }
+}
+
+// KPI Logic
+function openKpiModal() {
+  const container = document.getElementById('kpiInputsContainer');
+  container.innerHTML = '';
+  for (const [key, val] of Object.entries(appData.kpis)) {
+    addKpiField(key, val);
+  }
+  document.getElementById('kpiModal').classList.add('active');
+}
+
+function closeKpiModal() {
+  document.getElementById('kpiModal').classList.remove('active');
+}
+
+function addKpiField(key = '', val = '') {
+  const container = document.getElementById('kpiInputsContainer');
+  const div = document.createElement('div');
+  div.style.display = 'flex';
+  div.style.gap = '8px';
+  div.style.marginBottom = '8px';
+  div.innerHTML = `
+    <input type="text" placeholder="KPI Name" value="${key}" class="kpi-key" style="flex:1;">
+    <input type="text" placeholder="Value" value="${val}" class="kpi-val" style="flex:1;">
+    <button type="button" class="btn-outline" style="padding:0 12px;" onclick="this.parentElement.remove()">X</button>
+  `;
+  container.appendChild(div);
+}
+
+document.getElementById('kpiForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const keys = document.querySelectorAll('.kpi-key');
+  const vals = document.querySelectorAll('.kpi-val');
+
+  appData.kpis = {};
+  for(let i=0; i<keys.length; i++) {
+    const k = keys[i].value.trim();
+    const v = vals[i].value.trim();
+    if(k) appData.kpis[k] = v;
+  }
+
+  saveData();
+  closeKpiModal();
+  renderAll();
+});
+
+// Daily Report Logic
+function generateReport() {
+  const dateStr = new Date().toLocaleDateString();
+  const delayedItems = appData.items.filter(i => i.status === 'Delayed');
+  const onTrackItems = appData.items.filter(i => i.status === 'On Track');
+  const atRiskItems = appData.items.filter(i => i.status === 'At Risk');
+
+  let reportText = `DAILY REPORT - ${dateStr}\n`;
+  reportText += `==============================\n\n`;
+
+  reportText += `🚨 OVERDUE / DELAYED (${delayedItems.length}):\n`;
+  delayedItems.forEach(i => reportText += `- [${i.type.toUpperCase()}] ${i.title} (Owner: ${i.owner})\n  Next: ${i.nextAction}\n`);
+
+  reportText += `\n⚠️ AT RISK (${atRiskItems.length}):\n`;
+  atRiskItems.forEach(i => reportText += `- [${i.type.toUpperCase()}] ${i.title} (Owner: ${i.owner})\n  Next: ${i.nextAction}\n`);
+
+  reportText += `\n✅ ON TRACK (${onTrackItems.length}):\n`;
+  onTrackItems.forEach(i => reportText += `- [${i.type.toUpperCase()}] ${i.title} (Owner: ${i.owner})\n  Next: ${i.nextAction}\n`);
+
+  document.getElementById('reportContent').innerText = reportText;
+  document.getElementById('reportModal').classList.add('active');
+}
+
+function closeReportModal() {
+  document.getElementById('reportModal').classList.remove('active');
+}
+
+
+function renderMyWork() {
+  const priorityContainer = document.getElementById('myWorkPriority');
+  const otherContainer = document.getElementById('myWorkOther');
+
+  priorityContainer.innerHTML = '';
+  otherContainer.innerHTML = '';
+
+  const myItems = appData.items.filter(i => i.owner === 'Rose');
+
+  const priorityItems = [];
+  const otherItems = [];
+
+  myItems.forEach(item => {
+    const isStale = Date.now() - item.lastUpdated > 24 * 60 * 60 * 1000;
+    const isDelayed = item.status === 'Delayed';
+
+    // Check if it's priority
+    if (isStale || isDelayed) {
+      priorityItems.push(item);
+    } else {
+      otherItems.push(item);
+    }
+  });
+
+  function createCard(item) {
+    const div = document.createElement('div');
+    div.className = 'card';
+    div.style.cursor = 'pointer';
+    div.onclick = () => openModal(item.id);
+
+    const statusClass = item.status === 'On Track' ? 'status-green' : item.status === 'At Risk' ? 'status-yellow' : 'status-red';
+
+    let staleHtml = '';
+    if (Date.now() - item.lastUpdated > 24 * 60 * 60 * 1000) {
+      staleHtml = `<div class="stale-warning">⚠ Not updated in 24h</div>`;
+    }
+
+    let metaHtml = '';
+    if (item.type === 'pipeline') {
+      metaHtml = `<span style="font-size:12px; color:var(--text-muted); background:#f3f4f6; padding:2px 6px; border-radius:4px; margin-right:8px;">${item.stage}</span>`;
+    }
+
+    div.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+        <div>
+          <div style="font-weight: 600; font-size:16px; margin-bottom: 8px;">${item.title}</div>
+          ${metaHtml}<div class="status-badge ${statusClass}">${item.status}</div>
+        </div>
+      </div>
+      <div style="margin-top: 12px; color: var(--text-muted);">
+        <b>Next Action:</b> ${item.nextAction}
+      </div>
+      ${staleHtml}
+    `;
+    return div;
+  }
+
+  if (priorityItems.length === 0) {
+    priorityContainer.innerHTML = '<p style="color:var(--text-muted);">No priority items!</p>';
+  } else {
+    priorityItems.forEach(item => priorityContainer.appendChild(createCard(item)));
+  }
+
+  if (otherItems.length === 0) {
+    otherContainer.innerHTML = '<p style="color:var(--text-muted);">No other work.</p>';
+  } else {
+    otherItems.forEach(item => otherContainer.appendChild(createCard(item)));
+  }
+}
+
+// Drag & Drop for Pipeline
+let draggedItemId = null;
+
+function handleDragStart(e, id) {
+  draggedItemId = id;
+  e.dataTransfer.effectAllowed = 'move';
+  e.target.style.opacity = '0.5';
+}
+
+function handleDragEnd(e) {
+  e.target.style.opacity = '1';
+  draggedItemId = null;
+}
+
+function handleDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+}
+
+function handleDrop(e, stage) {
+  e.preventDefault();
+  if (draggedItemId) {
+    const item = appData.items.find(i => i.id === draggedItemId);
+    if (item && item.stage !== stage) {
+      item.stage = stage;
+      item.lastUpdated = Date.now();
+      saveData();
+      renderAll();
+    }
+  }
+}
+
+function renderPipeline() {
+  const container = document.getElementById('pipelineContainer');
+  const stages = ['Script', 'Filming', 'Editing', 'Review', 'Approved', 'Uploaded'];
+  container.innerHTML = '';
+
+  stages.forEach(stage => {
+    const col = document.createElement('div');
+    col.className = 'column';
+    col.ondragover = handleDragOver;
+    col.ondrop = (e) => handleDrop(e, stage);
+
+    col.innerHTML = `<h4>${stage}</h4>`;
+
+    const stageItems = appData.items.filter(i => i.type === 'pipeline' && i.stage === stage);
+
+    stageItems.forEach(item => {
+      const itemEl = document.createElement('div');
+      itemEl.className = 'item';
+      itemEl.draggable = true;
+      itemEl.ondragstart = (e) => handleDragStart(e, item.id);
+      itemEl.ondragend = handleDragEnd;
+      itemEl.onclick = (e) => {
+        // Prevent modal open when dragging
+        if (e.target.tagName !== 'BUTTON') {
+           openModal(item.id);
+        }
+      };
+
+      const statusClass = item.status === 'On Track' ? 'status-green' : item.status === 'At Risk' ? 'status-yellow' : 'status-red';
+
+      let staleHtml = '';
+      if (Date.now() - item.lastUpdated > 24 * 60 * 60 * 1000) {
+        staleHtml = `<div class="stale-warning">⚠ Stale (>24h)</div>`;
+      }
+
+      itemEl.innerHTML = `
+        <div style="font-weight: 600; margin-bottom: 4px;">${item.title}</div>
+        <div class="status-badge ${statusClass}">${item.status}</div>
+        <div style="font-size: 12px; margin-top: 8px; color: var(--text-muted);">
+          <b>Next:</b> ${item.nextAction}
+        </div>
+        ${staleHtml}
+      `;
+      col.appendChild(itemEl);
+    });
+
+    container.appendChild(col);
+  });
+}
+
+// Initial render
+document.addEventListener('DOMContentLoaded', renderAll);
+
 </script>
 
 </body>

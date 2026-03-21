@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>LeadFlow OS</title>
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  display: flex;
+  background: #f5f6fa;
+}
+
+.sidebar {
+  width: 220px;
+  background: #1e1e2f;
+  color: white;
+  height: 100vh;
+  padding: 20px;
+}
+
+.sidebar h2 {
+  font-size: 18px;
+  margin-bottom: 20px;
+}
+
+.sidebar div {
+  margin: 10px 0;
+  cursor: pointer;
+}
+
+.main {
+  flex: 1;
+  padding: 20px;
+}
+
+.card {
+  background: white;
+  padding: 15px;
+  margin-bottom: 15px;
+  border-radius: 8px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.status-green { color: green; font-weight: bold; }
+.status-yellow { color: orange; font-weight: bold; }
+.status-red { color: red; font-weight: bold; }
+
+.pipeline {
+  display: flex;
+  gap: 10px;
+}
+
+.column {
+  background: #eaeaea;
+  padding: 10px;
+  flex: 1;
+  border-radius: 6px;
+}
+
+.item {
+  background: white;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="sidebar">
+  <h2>LeadFlow OS</h2>
+  <div onclick="showTab('dashboard')">Dashboard</div>
+  <div onclick="showTab('campaigns')">Campaigns</div>
+  <div onclick="showTab('pipeline')">Pipeline</div>
+  <div onclick="showTab('tasks')">Tasks</div>
+  <div onclick="showTab('mywork')">My Work</div>
+  <div onclick="showTab('automations')">Automations</div>
+  <div onclick="showTab('resources')">Resources</div>
+</div>
+
+<div class="main">
+
+<!-- DASHBOARD -->
+<div id="dashboard" class="tab">
+  <h2>Dashboard</h2>
+
+  <div class="grid">
+    <div class="card">Leads Today: 12</div>
+    <div class="card">Active Campaigns: 5</div>
+    <div class="card">Videos in Production: 8</div>
+    <div class="card">Overdue Tasks: 2</div>
+  </div>
+
+  <div class="card">
+    <h3>Editable KPIs</h3>
+    <p>Appointments Booked: 4</p>
+    <p>Close Rate: 20%</p>
+  </div>
+
+  <div class="card">
+    <h3>Alerts</h3>
+    <p class="status-red">⚠ Task not updated in 24h</p>
+    <p class="status-red">⚠ Campaign delayed</p>
+  </div>
+</div>
+
+<!-- CAMPAIGNS -->
+<div id="campaigns" class="tab" style="display:none;">
+  <h2>Campaigns</h2>
+
+  <div class="card">
+    <b>Client:</b> Plumbing Co <br>
+    <b>Status:</b> <span class="status-green">Running</span><br>
+    <b>Next Action:</b> Monitor leads<br>
+    <b>Last Updated:</b> Today
+  </div>
+</div>
+
+<!-- PIPELINE -->
+<div id="pipeline" class="tab" style="display:none;">
+  <h2>Production Pipeline</h2>
+
+  <div class="pipeline">
+    <div class="column">
+      <h4>Editing</h4>
+      <div class="item">
+        Video #1 <br>
+        <span class="status-yellow">At Risk</span><br>
+        Next: Add captions<br>
+      </div>
+    </div>
+
+    <div class="column">
+      <h4>Review</h4>
+      <div class="item">
+        Video #2 <br>
+        <span class="status-green">On Track</span><br>
+        Next: Approve video<br>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TASKS -->
+<div id="tasks" class="tab" style="display:none;">
+  <h2>Tasks</h2>
+
+  <div class="card">
+    Launch Campaign <br>
+    <span class="status-red">Delayed</span><br>
+    Next: Upload video<br>
+    Last Updated: 2 days ago
+  </div>
+</div>
+
+<!-- MY WORK -->
+<div id="mywork" class="tab" style="display:none;">
+  <h2>My Work</h2>
+
+  <h3>Priority / Needs Attention</h3>
+  <div class="card">
+    Fix Campaign Issue <br>
+    <span class="status-red">Delayed</span><br>
+    Next: Update targeting
+  </div>
+
+  <h3>All Other Work</h3>
+  <div class="card">
+    Edit Video #3 <br>
+    <span class="status-green">On Track</span><br>
+    Next: Add transitions
+  </div>
+</div>
+
+<!-- AUTOMATIONS -->
+<div id="automations" class="tab" style="display:none;">
+  <h2>Automations</h2>
+
+  <div class="card">
+    New Lead → SMS <br>
+    Status: <span class="status-green">Working</span><br>
+    Next: Monitor performance
+  </div>
+</div>
+
+<!-- RESOURCES -->
+<div id="resources" class="tab" style="display:none;">
+  <h2>Resources</h2>
+
+  <div class="card">
+    SOP: Launch Campaign <br>
+    Link: Google Doc
+  </div>
+
+  <div class="card">
+    Template: Ad Copy <br>
+    Link: Notion
+  </div>
+</div>
+
+</div>
+
+<script>
+function showTab(tabId) {
+  const tabs = document.querySelectorAll('.tab');
+  tabs.forEach(tab => tab.style.display = 'none');
+  document.getElementById(tabId).style.display = 'block';
+}
+</script>
+
+</body>
+</html>

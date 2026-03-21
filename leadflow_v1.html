@@ -329,16 +329,14 @@ button:hover {
     </div>
   </div>
 </div>
-
 <!-- CAMPAIGNS -->
 <div id="campaigns" class="tab" style="display:none;">
-  <h2>Campaigns</h2>
-
-  <div class="card">
-    <b>Client:</b> Plumbing Co <br>
-    <b>Status:</b> <span class="status-green">Running</span><br>
-    <b>Next Action:</b> Monitor leads<br>
-    <b>Last Updated:</b> Today
+  <div class="header-actions">
+    <h2>Campaigns</h2>
+    <button class="btn-primary" onclick="openModal('', 'campaign')">+ Add Campaign</button>
+  </div>
+  <div id="campaignsContainer" style="display:flex; flex-direction:column; gap:16px;">
+    <!-- Campaigns dynamically rendered here -->
   </div>
 </div>
 
@@ -356,13 +354,12 @@ button:hover {
 
 <!-- TASKS -->
 <div id="tasks" class="tab" style="display:none;">
-  <h2>Tasks</h2>
-
-  <div class="card">
-    Launch Campaign <br>
-    <span class="status-red">Delayed</span><br>
-    Next: Upload video<br>
-    Last Updated: 2 days ago
+  <div class="header-actions">
+    <h2>Tasks</h2>
+    <button class="btn-primary" onclick="openModal('', 'task')">+ Add Task</button>
+  </div>
+  <div id="tasksContainer" style="display:flex; flex-direction:column; gap:16px;">
+    <!-- Tasks dynamically rendered here -->
   </div>
 </div>
 
@@ -619,7 +616,90 @@ function renderAll() {
   renderDashboard();
   renderPipeline();
   renderMyWork();
-  // Call other rendering functions here as we build them
+  renderCampaigns();
+  renderTasks();
+}
+
+function renderCampaigns() {
+  const container = document.getElementById('campaignsContainer');
+  container.innerHTML = '';
+
+  const campaigns = appData.items.filter(i => i.type === 'campaign');
+
+  if (campaigns.length === 0) {
+    container.innerHTML = '<p style="color:var(--text-muted);">No campaigns found.</p>';
+    return;
+  }
+
+  campaigns.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'card';
+    div.style.cursor = 'pointer';
+    div.onclick = () => openModal(item.id);
+
+    const statusClass = item.status === 'On Track' ? 'status-green' : item.status === 'At Risk' ? 'status-yellow' : 'status-red';
+
+    let staleHtml = '';
+    if (Date.now() - item.lastUpdated > 24 * 60 * 60 * 1000) {
+      staleHtml = `<div class="stale-warning">⚠ Not updated in 24h</div>`;
+    }
+
+    div.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+        <div>
+          <div style="font-weight: 600; font-size:16px; margin-bottom: 8px;">${item.title}</div>
+          <div class="status-badge ${statusClass}">${item.status}</div>
+        </div>
+        <div style="color:var(--text-muted); font-size:12px;">Owner: ${item.owner}</div>
+      </div>
+      <div style="margin-top: 12px; color: var(--text-muted);">
+        <b>Next Action:</b> ${item.nextAction}
+      </div>
+      ${staleHtml}
+    `;
+    container.appendChild(div);
+  });
+}
+
+function renderTasks() {
+  const container = document.getElementById('tasksContainer');
+  container.innerHTML = '';
+
+  const tasks = appData.items.filter(i => i.type === 'task');
+
+  if (tasks.length === 0) {
+    container.innerHTML = '<p style="color:var(--text-muted);">No tasks found.</p>';
+    return;
+  }
+
+  tasks.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'card';
+    div.style.cursor = 'pointer';
+    div.onclick = () => openModal(item.id);
+
+    const statusClass = item.status === 'On Track' ? 'status-green' : item.status === 'At Risk' ? 'status-yellow' : 'status-red';
+
+    let staleHtml = '';
+    if (Date.now() - item.lastUpdated > 24 * 60 * 60 * 1000) {
+      staleHtml = `<div class="stale-warning">⚠ Not updated in 24h</div>`;
+    }
+
+    div.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+        <div>
+          <div style="font-weight: 600; font-size:16px; margin-bottom: 8px;">${item.title}</div>
+          <div class="status-badge ${statusClass}">${item.status}</div>
+        </div>
+        <div style="color:var(--text-muted); font-size:12px;">Owner: ${item.owner}</div>
+      </div>
+      <div style="margin-top: 12px; color: var(--text-muted);">
+        <b>Next Action:</b> ${item.nextAction}
+      </div>
+      ${staleHtml}
+    `;
+    container.appendChild(div);
+  });
 }
 
 function renderDashboard() {
